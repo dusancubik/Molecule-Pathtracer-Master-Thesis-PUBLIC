@@ -12,4 +12,4 @@
 - UI - výběr proteinu, barvy, skybox
 
 High Roughness: https://youtu.be/Qd9NzgdKY5w
-Zero Roughness: 
+Zero Roughness: https://youtu.be/kDUHRfjC6WU
