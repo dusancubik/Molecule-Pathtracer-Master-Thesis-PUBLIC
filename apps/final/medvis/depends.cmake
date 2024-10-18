@@ -10,4 +10,4 @@
 ################################################################################
 
 # The list of internal dependencies using "<ModuleName>_MODULE" format.
-set(dependencies CORE_MODULE GLFW_MODULE WEBGPU_MODULE GUI_MODULE glm)
+set(dependencies CORE_MODULE GLFW_MODULE WEBGPU_MODULE GUI_MODULE glm NATIVEFILEDIALOG_MODULE)

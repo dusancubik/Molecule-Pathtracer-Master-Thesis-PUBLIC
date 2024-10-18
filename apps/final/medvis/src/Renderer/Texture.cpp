@@ -35,7 +35,7 @@ Texture::Texture(WGPUDevice _device, int width, int height, WGPUTextureFormat fo
 	samplerDescriptor.maxAnisotropy = 1;
 
 	sampler = wgpuDeviceCreateSampler(device, &samplerDescriptor);
-
+	
 }
 
 Texture::Texture(WGPUDevice _device, int width, int height, WGPUTextureFormat format, CubemapData cubemapData) {

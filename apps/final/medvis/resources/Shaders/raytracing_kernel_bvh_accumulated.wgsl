@@ -73,8 +73,6 @@ const PI = 3.1415926535f;
 @group(0) @binding(1) var<storage,read> spheres: array<Sphere>;
 @group(0) @binding(2) var<uniform> uCamera: Camera;
 @group(0) @binding(3) var<uniform> config: Config;
-@group(0) @binding(4) var cubemapTexture: texture_cube<f32>;
-@group(0) @binding(5) var cubemapSampler : sampler;
 
 @group(1) @binding(0) var origin_buffer: texture_storage_2d<rgba32float,write>;
 @group(1) @binding(1) var direction_buffer: texture_storage_2d<rgba32float,write>;
@@ -82,6 +80,26 @@ const PI = 3.1415926535f;
 @group(1) @binding(3) var direction_buffer_read: texture_2d<f32>;
 @group(1) @binding(4) var color_buffer: texture_storage_2d<rgba8unorm,write>;
 @group(1) @binding(5) var color_buffer_read: texture_2d<f32>;
+
+@group(2) @binding(0) var cubemapTexture: texture_cube<f32>;
+@group(2) @binding(1) var cubemapSampler : sampler;
+//DEBUG
+@group(3) @binding(0) var debugCounter_write: texture_storage_2d<r32uint,write>;
+@group(3) @binding(1) var debugCounter_read : texture_2d<u32>;
+@group(3) @binding(2) var<storage, read_write> debugLineData: DebugData;
+@group(3) @binding(3) var<storage, read_write> debugLineDataArray: array<DebugData>;
+@group(3) @binding(4) var<storage, read_write> debugIndexCounter: atomic<u32>;
+@group(3) @binding(5) var<uniform> debugConfig: DebugConfig;
+
+struct DebugData{
+	data: vec4f,
+	values: array<vec4f,10>
+}
+struct DebugConfig{
+	coordinates: vec4f,
+	visOptions: vec4f,
+	cameraPosition: vec4f,
+}
 struct Camera {
     projectionMatrix: mat4x4f,
     viewMatrix: mat4x4f,
@@ -94,7 +112,10 @@ struct Config{
 	currentSample : i32,
 	maxSamples : i32,
 	time:f32,
-	uniformRandom:f32
+	uniformRandom:f32,
+	debugMode: i32,
+	debugCollectingMode: i32,
+	debugRayIndex: i32
 }
 struct Light{
 	position:vec3f,
@@ -140,11 +161,11 @@ struct RayDataTex{
 	prob:f32
 }
 //const emptySphere = Sphere(vec3f(0.f),-1.f,vec4f(0.f)) ; 
-const miss = Hit(vec3f(0.0f), 1e20, vec3f(0.0f), vec4f(1.f,0.f,0.f,0.f));//vec4f(0.f));
+const miss = Hit(vec3f(0.0f), 1e20, vec3f(0.0f), vec4f(0.f,0.f,0.f,0.f));//vec4f(0.f));
 const missT = 1e20;
 const numberOfPros = 8*4;
 
-const roughness_global = 0.01; 
+const roughness_global = 0.1; 
 
 const primaryId = 1;
 const reflectId = 1;
@@ -192,7 +213,6 @@ fn main(@builtin(workgroup_id) WorkgroupID:vec3<u32>,@builtin(local_invocation_i
 		stop_mark = rayData.attenuation;
 		prev_cos_theta = rayData.prob;
 	}
-	
 	if(iteration<config.maxIterations /*&& config.currentSample<config.maxSamples*/){
 			textureStore(color_buffer,screen_pos,vec4f(1.,0.,0.,1.));
 			textureStore(origin_buffer,screen_pos,vec4f(0.,0.,0.,stop_mark));
@@ -216,6 +236,89 @@ fn main(@builtin(workgroup_id) WorkgroupID:vec3<u32>,@builtin(local_invocation_i
 	var color = select(textureLoad(color_buffer_read,screen_pos,0).xyz,vec3f(1.f,1.f,1.f),config.currentIteration == 0);
 	//var color = textureLoad(color_buffer_read,screen_pos,0).xyz;
 	//if(config.currentIteration==0){stop_mark=1.f; prev_cos_theta=1.f;}
+	let debugCountTest = textureLoad(debugCounter_read,screen_pos,0);
+
+	if(i32(debugConfig.coordinates.z) == 1){
+		//textureStore(color_buffer,screen_pos,vec4f(0.,0.,1.,1.));
+		//return;
+		if(screen_pos.x == i32(debugConfig.coordinates.x) && screen_pos.y == i32(debugConfig.coordinates.y)){
+			let index = config.currentSample;
+			if(stop_mark == 0.f){
+				if(debugLineDataArray[index].data.x == f32(config.currentIteration)){
+					debugLineDataArray[index].values[config.currentIteration] = vec4f(ray.origin + 1000.f*ray.direction,0.);
+				}
+				
+			}else{
+				debugLineDataArray[index].values[config.currentIteration] = vec4f(ray.origin,0.);
+				debugLineDataArray[index].data.x = f32(config.currentIteration+1);
+			}
+		}
+	}
+
+	if(config.debugCollectingMode == 1){
+		let debugCountTest = textureLoad(debugCounter_read,screen_pos,0);
+		//if(config.debugMode == 1){
+		/*if( debugCountTest.r > 10){
+			//if(config.currentSample > 15 && debugCountTest.r==0){
+				//dead pixel
+				textureStore(color_buffer,screen_pos,vec4f(0.,1.,0.,1.));
+				return;
+		}*/
+		if(config.currentSample == 14){
+
+			if(config.currentIteration == 0){
+				if( debugCountTest.r > 10){
+					let index = atomicAdd(&debugIndexCounter, 1);
+					//debugLineDataArray[index].values[config.currentIteration] = vec4f(ray.origin,f32(index));
+					if(index<32){
+						textureStore(debugCounter_write,screen_pos,vec4u(index));
+						debugLineDataArray[index].values[config.currentIteration] = vec4f(ray.origin,0.);
+						debugLineDataArray[index].data.x = f32(config.currentIteration+1);
+					}else{
+						textureStore(debugCounter_write,screen_pos,vec4u(9999));
+					}
+				}else{
+					textureStore(debugCounter_write,screen_pos,vec4u(9999));
+				}
+			}else{
+				if( debugCountTest.r < 9999){
+					let index = debugCountTest.r;
+					textureStore(debugCounter_write,screen_pos,vec4u(index));
+					if(stop_mark == 0.f){
+						if(debugLineDataArray[index].data.x == f32(config.currentIteration)){
+							debugLineDataArray[index].values[config.currentIteration] = vec4f(ray.origin + 1000.f*ray.direction,0.);
+						}
+						
+					}else{
+						debugLineDataArray[index].values[config.currentIteration] = vec4f(ray.origin,0.);
+						debugLineDataArray[index].data.x = f32(config.currentIteration+1);
+					}
+				}else{
+					textureStore(debugCounter_write,screen_pos,vec4u(9999));
+				}
+			}
+
+		}
+	}
+	//if(config.debugMode == 1){
+	/*	if(debugCountTest.r > 10){
+		//if(config.currentSample > 15 && debugCountTest.r==0){
+			//dead pixel
+			textureStore(color_buffer,screen_pos,vec4f(0.,1.,0.,1.));
+			return;
+	}*/
+		/*if(config.currentSample == 3){
+			if(screen_pos.x == i32(screen_size.x/2) && screen_pos.y == i32(screen_size.y/2)){
+				debugLineData.values[config.currentIteration] = vec4f(ray.origin,0.);
+				if(stop_mark == 0.f){
+					debugLineData.values[config.currentIteration] = vec4f(ray.origin + ray.direction * 1000.f,0.);
+				}else{
+					debugLineData.values[config.currentIteration] = vec4f(ray.origin,0.);
+					debugLineData.data.x = f32(config.currentIteration+1);
+				}
+			}
+		}*/
+	//}
 	var stop = false;
 	if(stop_mark != 0.f){ //not blank ray
 		let hit = Trace(ray,attenuation,LocalInvocationID);
@@ -241,8 +344,8 @@ fn main(@builtin(workgroup_id) WorkgroupID:vec3<u32>,@builtin(local_invocation_i
 						textureStore(color_buffer,screen_pos,vec4f(0.,0.,1.,0.));
 						return;
 					}
-				//if( (r_x)<roughness_global){
-				if(true){
+				if( (r_x)<roughness_global){
+				//if(false){
 					
 
 					var L = cosineWSampleHemisphere(r_x,r_y);//uniformSampleHemisphere(r_x,r_y);
@@ -274,8 +377,9 @@ fn main(@builtin(workgroup_id) WorkgroupID:vec3<u32>,@builtin(local_invocation_i
 					//let H = normalize(L+(-ray.direction));
 					//let F = FresnelSchlick(hit.material.xyz, -ray.direction,H);
 
-					if(config.currentIteration == config.maxIterations-1){
+					if(config.currentIteration == config.maxIterations-1){ //LAST BOUNCE IN SAMPLE
 						color = vec3f(0.f);// vec3f(pbr)*PI;//vec3f(pbr)*PI;//vec3f(1.,0.,0.);
+						if(config.debugCollectingMode == 1){DebugCounterAdd(screen_pos);}
 					}else{
 						color *= /*(1.-F)*/ vec3f(pbr)*PI;//cos_theta* (1/pdf);
 					}
@@ -379,7 +483,8 @@ fn main(@builtin(workgroup_id) WorkgroupID:vec3<u32>,@builtin(local_invocation_i
 					
 					// ----------------------------------------------------------------------
 					if(config.currentIteration == config.maxIterations-1){
-						color = vec3f(0.,0.,0.);
+						color = vec3f(0.f);//0.5f*vec3f(0.926f, 0.721f, 0.504f);
+						if(config.debugCollectingMode == 1){DebugCounterAdd(screen_pos);}
 					}else{
 						color *= pbr*NdotL* (1./pdf);//pbr*NdotL* (1./pdf);// * sin_theta_L*NdotL*(1./pdf);
 					}
@@ -389,11 +494,13 @@ fn main(@builtin(workgroup_id) WorkgroupID:vec3<u32>,@builtin(local_invocation_i
 		}else{
 			if(iteration==0){
 				color = textureSampleLevel(cubemapTexture, cubemapSampler, ray.direction,0).rgb;
-				textureStore(origin_buffer,screen_pos,vec4f(0.f));
+				textureStore(origin_buffer,screen_pos,vec4f(ray.origin,0.f));
+				textureStore(direction_buffer,screen_pos,vec4f(ray.direction,0.f));
 			}else{
 				color *= ((textureSampleLevel(cubemapTexture, cubemapSampler, ray.direction,0).rgb));// * prev_cos_theta;
 				//color *= vec3f(0.f);
-				textureStore(origin_buffer,screen_pos,vec4f(0.f));
+				textureStore(origin_buffer,screen_pos,vec4f(ray.origin,0.f));
+				textureStore(direction_buffer,screen_pos,vec4f(ray.direction,0.f));
 			}
 			stop = true;
 		}
@@ -405,7 +512,9 @@ fn main(@builtin(workgroup_id) WorkgroupID:vec3<u32>,@builtin(local_invocation_i
 		count = f32(config.currentIteration+1);
 	}*/
 	textureStore(color_buffer,screen_pos,vec4f(color,count));// /f32(config.maxSamples),1.));
-	
+	if(screen_pos.x == i32(screen_size.x/2) && screen_pos.y == i32(screen_size.y/2)){
+		textureStore(color_buffer,screen_pos,vec4f(0.,1.,0.,count));
+	}
 	//let ibl_sample = textureSampleLevel(cubemapTexture, cubemapSampler, ray.direction,0).rgb;
 	//textureStore(color_buffer,screen_pos,vec4f(ibl_sample,1.));
 	
@@ -1254,4 +1363,10 @@ fn FresnelSchlick(color :vec3f, V:vec3f,H:vec3f) -> vec3f
 	return res;
 
 	//return f0 + (1.0 - f0) * pow(1.0 - VdotH, 5.0);
+}
+
+fn DebugCounterAdd(screen_pos : vec2<i32>){
+	var debugCount = textureLoad(debugCounter_read,screen_pos,0);
+	debugCount.r = debugCount.r + 1;
+	textureStore(debugCounter_write,screen_pos,debugCount);
 }

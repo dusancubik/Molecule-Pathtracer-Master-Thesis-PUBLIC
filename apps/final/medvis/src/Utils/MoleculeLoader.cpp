@@ -1,6 +1,8 @@
 #include "../../include/Utils/MoleculeLoader.hpp"
 
-std::vector<std::shared_ptr<SphereCPU>> MoleculeLoader::loadAtoms(const std::filesystem::path& path) {
+std::vector<std::shared_ptr<SphereCPU>> MoleculeLoader::loadAtoms(const std::filesystem::path& path, std::atomic<bool>& taskComplete) {
+	taskComplete = false;
+
 	std::ifstream file;
 	file.open(path);
 
@@ -43,6 +45,7 @@ std::vector<std::shared_ptr<SphereCPU>> MoleculeLoader::loadAtoms(const std::fil
 	std::cerr << "maxAABB: (" << maxAABB.x << "," << maxAABB.y << "," << maxAABB.z << ")" << std::endl;
 
 	for (int i = 0;i < atoms.size();i++) atoms[i]->origin -= midAABB;
+	//taskComplete = true;
 	return atoms;
 }
 void MoleculeLoader::parseLineToAtom(std::string& line, std::shared_ptr<SphereCPU> &atom) {

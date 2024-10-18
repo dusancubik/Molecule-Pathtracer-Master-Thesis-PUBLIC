@@ -6,10 +6,13 @@
 
 ## TODO:
 
-- solve fireflies issue
+- solve dead pixels issue (the cause of the issue is known)
 - resolve memory leaks.
 - create macros for file paths.
 - UI: selection of protein, colors, skybox.
 
 High Roughness: https://youtu.be/Qd9NzgdKY5w
 Zero Roughness: https://youtu.be/kDUHRfjC6WU
+Better Skybox: https://www.youtube.com/watch?v=zVENHNlNxlI
+pdb file loading: https://www.youtube.com/watch?v=zuRG5z6GwFg
+debug mode for dead pixels (tracing a ray):https://www.youtube.com/watch?v=iU2_No3X14k

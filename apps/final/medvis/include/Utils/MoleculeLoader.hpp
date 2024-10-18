@@ -16,6 +16,6 @@
 
 class MoleculeLoader {
 	public:
-		static std::vector<std::shared_ptr<SphereCPU>> loadAtoms(const std::filesystem::path& path);
+		static std::vector<std::shared_ptr<SphereCPU>> loadAtoms(const std::filesystem::path& path,std::atomic<bool>& taskComplete);
 		static void parseLineToAtom(std::string& line, std::shared_ptr<SphereCPU> &atom);
 };

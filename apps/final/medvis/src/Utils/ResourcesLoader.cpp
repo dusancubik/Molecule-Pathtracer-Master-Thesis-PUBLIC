@@ -19,7 +19,7 @@ CubemapData ResourcesLoader::loadCubemapData(const path& path) {
 		"cubemap-negZ.png",
 	};
 
-	// Load image data for each of the 6 layers
+	
 	WGPUExtent3D cubemapSize = { 0, 0, 6 };
 	std::array<uint8_t*, 6> pixelData;
 	for (uint32_t layer = 0; layer < 6; ++layer) {

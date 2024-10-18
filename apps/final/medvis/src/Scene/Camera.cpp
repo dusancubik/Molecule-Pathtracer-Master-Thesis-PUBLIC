@@ -57,13 +57,13 @@ void Camera::onMouseMove(double x, double y) {
 	if (is_zooming) {
 		distance *= (1.0f + yoffset * 0.005f);
 
-		// Clamps the results.
+		
 		if (distance < 1.f)
 			distance = 1.f;
 
 	}
 	else {
-		const float sensitivity = 0.5f;
+		const float sensitivity = 0.2f;
 		xoffset *= sensitivity;
 		yoffset *= sensitivity;
 
