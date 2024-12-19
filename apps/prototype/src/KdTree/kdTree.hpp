@@ -1,3 +1,17 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: BVH.hpp
+ *
+ *  Description:
+ *  The KdTree class is responsible for constructing Kd-tree.
+ *
+ *
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 #include "Pipelines/renderPipelineInterface.hpp"
 #include "ConstructionStrategy/kdTreeConstructionStrategy.hpp"
@@ -12,14 +26,6 @@
 
 struct LeafUBO {
 
-	/*Sphere spheres[3] = {Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f)),
-						 Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f)),
-						 Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f))
-						//Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f))
-						 //Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f)),
-						 //Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f))
-																   
-						};*/
 	//int spheresIdx[4] = { -1,-1,-1,-1 };
 	glm::vec3 minAABB = glm::vec3(0.f);
 	int firstIndex;
@@ -35,43 +41,9 @@ struct KdTreeNodeUBO {
 	int depth = -1;
 	int leafId = -1; //0 == root, >0 leaves
 	int padd = -1; //?? použít aliagn?
-	/*glm::vec4 point = glm::vec4(glm::vec3(0.f), 1.f);
-	//int isLeaf = 0;
-	//int depth;
-	glm::vec4 meta = glm::vec4(-1,-1,-1,1); //(dimSplit,depth,isLeaf,1.0)
-	Sphere spheres[3] = {Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f)),
-						 Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f)),
-						 Sphere(glm::vec3(0.f),-1.f,glm::vec4(0.f)) };
-	glm::vec4 minAABB = glm::vec4(0.f);
-	glm::vec4 maxAABB = glm::vec4(0.f);*/
+	
 };
 
-
-
-/*struct KdTreeNode {
-	int dimSplit = -1; //x=0, y=1, z=2
-	float splitDistance;
-	glm::vec3 point;
-	glm::vec3 minAABB;
-	glm::vec3 maxAABB;
-	bool isLeaf = false;
-	std::vector<Sphere> spheres;
-	int depth = -1;
-};
-
-struct KdTreeNode_new {
-	int dimSplit = -1; //x=0, y=1, z=2
-	float splitDistance;
-	glm::vec3 point;
-	glm::vec3 minAABB;
-	glm::vec3 maxAABB;
-	bool isLeaf = false;
-	std::vector<Sphere> spheres;
-	int depth = -1;
-	bool left = false;
-	int parent = -1;
-	int id = -1;
-};*/
 
 
 class KdTree : public KdTreeInterface<KdTreeNodeSSBO, LeafUBO, Sphere> {

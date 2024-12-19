@@ -1,3 +1,15 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: bvhFragmentRenderer.hpp
+ *
+ *  Description:
+ *  The BVHFragmentRenderer is derived from RendererBase and handles rendering pipeline for BVH.
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 #include "rendererBase.hpp"
 #include "../BVH/bvh.hpp"
@@ -7,10 +19,10 @@ class BVHFragmentRenderer : public RendererBase {
 
 		void render(WGPUTextureView &nextTexture) override;
 
-        std::shared_ptr<Camera> getCamera() override { return camera; };
+        std::shared_ptr<PROTO_Camera> getCamera() override { return camera; };
 
         //void setKdTree(std::shared_ptr<KdTreeRopes> _kdTree)  { kdTree = _kdTree; }
-        void setBVH(std::shared_ptr<BVH> _bvh) { bvh = _bvh; }
+        void setBVH(std::shared_ptr<PROTO_BVH> _bvh) { bvh = _bvh; }
 	private:
         // Render Pipeline
         //WGPUBindGroupLayout bindGroupLayout = nullptr;
@@ -30,13 +42,13 @@ class BVHFragmentRenderer : public RendererBase {
         //std::shared_ptr<Timestamp> timestamp;
 
         //Camera
-        std::shared_ptr<Camera> camera;
+        std::shared_ptr<PROTO_Camera> camera;
         bool initCamera();
 
         //static void readBufferMap(WGPUBufferMapAsyncStatus status, void* userdata);
         //int frameTimeNS = 0;
         //kdTree
-        std::shared_ptr<BVH> bvh;
+        std::shared_ptr<PROTO_BVH> bvh;
         WGPUBuffer bvhStorageBuffer = nullptr;
         WGPUBuffer leavesStorageBuffer = nullptr;
 

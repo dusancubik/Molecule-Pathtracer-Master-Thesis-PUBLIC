@@ -2,15 +2,14 @@
 #include "rendererBase.cpp"
 #include "../KdTree/kdTreeRopes.cpp"
 bool KdTreeRopesRenderPipeline::initCamera() {
-	camera = std::make_shared<Camera>(1280, 720, glm::vec3(0.f, 0.f, 3.0f));
+	camera = std::make_shared<PROTO_Camera>(1280, 720, glm::vec3(0.f, 0.f, 3.0f));
 	return true;
 }
 
 
 
 void KdTreeRopesRenderPipeline::initBindGroup(WGPUBindGroup &bindGroup,WGPUBindGroupLayout bindGroupLayout) {
-	// Create a binding
-	// 
+
 	std::vector<WGPUBindGroupEntry> binding(4);
 
 	createBindGroupEntry(binding[0],0, uniformBuffer,0, sizeof(CameraUBO) );
@@ -18,11 +17,11 @@ void KdTreeRopesRenderPipeline::initBindGroup(WGPUBindGroup &bindGroup,WGPUBindG
 	createBindGroupEntry(binding[2], 2, leavesStorageBuffer, 0, sizeof(LeafRopesUBO) * kdTree->getLeavesUBOs().size());
 	createBindGroupEntry(binding[3], 3, spheresStorageBuffer, 0, sizeof(Sphere) * kdTree->getSphereSSBOs().size());
 	
-	// A bind group contains one or multiple bindings
+
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = bindGroupLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 4;
 	bindGroupDesc.entries = binding.data();//&binding;
 	bindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
@@ -66,21 +65,21 @@ void KdTreeRopesRenderPipeline::render(WGPUTextureView &nextTexture) {
 	WGPURenderPassDepthStencilAttachment depthStencilAttachment;
 	depthStencilAttachment.view = depthTextureView;
 
-	// The initial value of the depth buffer, meaning "far"
+	
 	depthStencilAttachment.depthClearValue = 1.0f;
-	// Operation settings comparable to the color attachment
+	
 	depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
 	depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
-	// we could turn off writing to the depth buffer globally here
+	
 	depthStencilAttachment.depthReadOnly = false;
 
-	// Stencil setup, mandatory but unused
+	
 	depthStencilAttachment.stencilClearValue = 0;
 	depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
 	depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
 	depthStencilAttachment.stencilReadOnly = true;
 
-	//renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
+	
 	std::vector<WGPURenderPassTimestampWrite> timestampWritess = timestamp->getTimestamps();
 	renderPassDesc.timestampWriteCount = 0;//2;
 	renderPassDesc.timestampWrites = nullptr;//timestampWritess.data();
@@ -90,12 +89,10 @@ void KdTreeRopesRenderPipeline::render(WGPUTextureView &nextTexture) {
 
 	
 	wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
-	// Draw 1 instance of a 3-vertices shape
+	
 	wgpuRenderPassEncoderSetBindGroup(renderPass, 0, bindGroup, 0, nullptr);
 
-	//wgpuRenderPassEncoderWriteTimestamp(renderPass, timestamp->getQuerySet(), 0);
 
-	//wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 0);
 	wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
 	
 	wgpuRenderPassEncoderEnd(renderPass);
@@ -115,8 +112,7 @@ void KdTreeRopesRenderPipeline::render(WGPUTextureView &nextTexture) {
 	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, &cmdBufferDesc);
 	wgpuQueueSubmit(queue, 1, &commandBuffer);
 
-	//wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
-	//copy timestamps
+
 	commandEncoderDesc.nextInChain = nullptr;
 	commandEncoderDesc.label = "Copy Command Encoder";
 	WGPUCommandEncoder copyEncoder = wgpuDeviceCreateCommandEncoder(device, &commandEncoderDesc);
@@ -149,7 +145,7 @@ void KdTreeRopesRenderPipeline::init(std::vector<SphereCPU*> _spheres, WGPUDevic
 	
 
 
-	shaderModule = ResourceManager::loadShaderModule("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\shaders\\raytracing_kdtree_ropes.wgsl", device);
+	shaderModule = ResourceManager::loadShaderModule("shaders_prototype\\raytracing_kdtree_ropes.wgsl", device);
 	std::cout << "Shader module: " << shaderModule << std::endl;
 
 	std::cout << "Creating BASIC render pipeline..." << std::endl;
@@ -163,7 +159,7 @@ void KdTreeRopesRenderPipeline::init(std::vector<SphereCPU*> _spheres, WGPUDevic
 
 	
 
-	// Vertex shader
+	
 	pipelineDesc.vertex.module = shaderModule;
 	pipelineDesc.vertex.entryPoint = "vs_main";
 	pipelineDesc.vertex.constantCount = 0;
@@ -174,7 +170,7 @@ void KdTreeRopesRenderPipeline::init(std::vector<SphereCPU*> _spheres, WGPUDevic
 	pipelineDesc.primitive.frontFace = WGPUFrontFace_CCW;
 	pipelineDesc.primitive.cullMode = WGPUCullMode_None;
 
-	// Fragment shader
+	
 	WGPUFragmentState fragmentState = {};
 	fragmentState.nextInChain = nullptr;
 	pipelineDesc.fragment = &fragmentState;
@@ -183,13 +179,13 @@ void KdTreeRopesRenderPipeline::init(std::vector<SphereCPU*> _spheres, WGPUDevic
 	fragmentState.constantCount = 0;
 	fragmentState.constants = nullptr;
 
-	// Configure blend state
+	
 	WGPUBlendState blendState;
-	// Usual alpha blending for the color:
+	
 	blendState.color.srcFactor = WGPUBlendFactor_SrcAlpha;
 	blendState.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
 	blendState.color.operation = WGPUBlendOperation_Add;
-	// We leave the target alpha untouched:
+	
 	blendState.alpha.srcFactor = WGPUBlendFactor_Zero;
 	blendState.alpha.dstFactor = WGPUBlendFactor_One;
 	blendState.alpha.operation = WGPUBlendOperation_Add;
@@ -198,25 +194,19 @@ void KdTreeRopesRenderPipeline::init(std::vector<SphereCPU*> _spheres, WGPUDevic
 	colorTarget.nextInChain = nullptr;
 	colorTarget.format = swap_chain_default_format;
 	colorTarget.blend = &blendState;
-	colorTarget.writeMask = WGPUColorWriteMask_All; // We could write to only some of the color channels.
-
-	// We have only one target because our render pass has only one output color
-	// attachment.
+	colorTarget.writeMask = WGPUColorWriteMask_All; 
 	fragmentState.targetCount = 1;
 	fragmentState.targets = &colorTarget;
 
 
-	//pipelineDesc.depthStencil = &depthStencilState;
 
-		// Multi-sampling
-	// Samples per pixel
 	pipelineDesc.multisample.count = 1;
-	// Default value for the mask, meaning "all bits on"
+	
 	pipelineDesc.multisample.mask = ~0u;
-	// Default value as well (irrelevant for count = 1 anyways)
+	
 	pipelineDesc.multisample.alphaToCoverageEnabled = false;
 
-	// Create binding layout (don't forget to = Default)
+	
 	std::vector<WGPUBindGroupLayoutEntry> bindingLayout(4);
 
 	
@@ -224,7 +214,7 @@ void KdTreeRopesRenderPipeline::init(std::vector<SphereCPU*> _spheres, WGPUDevic
 	createBindingLayout(1, sizeof(KdTreeNodeSSBO), bindingLayout[1], WGPUBufferBindingType_ReadOnlyStorage, WGPUShaderStage_Fragment);
 	createBindingLayout(2, sizeof(LeafRopesUBO), bindingLayout[2], WGPUBufferBindingType_ReadOnlyStorage, WGPUShaderStage_Fragment);
 	createBindingLayout(3, sizeof(Sphere),bindingLayout[3], WGPUBufferBindingType_ReadOnlyStorage, WGPUShaderStage_Fragment);
-	// Create a bind group layout
+	
 	WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};
 	bindGroupLayoutDesc.entryCount = 4;
 	bindGroupLayoutDesc.entries = bindingLayout.data();//&bindingLayout;
@@ -232,7 +222,7 @@ void KdTreeRopesRenderPipeline::init(std::vector<SphereCPU*> _spheres, WGPUDevic
 
 
 
-	// Pipeline layout
+	
 	WGPUPipelineLayoutDescriptor layoutDesc = {};
 	//layoutDesc.nextInChain = nullptr;
 	layoutDesc.bindGroupLayoutCount = 1;

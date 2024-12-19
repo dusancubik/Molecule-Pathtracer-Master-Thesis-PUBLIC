@@ -2,13 +2,6 @@
 #include "ConstructionStrategy/medianConstruction.cpp"
 #include "ConstructionStrategy/sahConstruction.cpp"
 
-/*KdTree::KdTree(std::vector<SphereCPU*> spheres) {
-	//constructTree_new(spheres);
-	MedianConstruction medianStrategy;
-	SahConstruction sahStrategy;
-	tree_new = sahStrategy.constructTree(spheres);
-	createTreeSsbos(tree_new);
-}*/
 
 void KdTree::construct(std::vector<SphereCPU*> spheres) {
 	std::cout << "construct\n";
@@ -82,8 +75,8 @@ void KdTree::createTreeSsbos(std::vector<KdTreeNode_new*> tree) {
 
 					sphereCPU->id = sphereSSBOs.size();
 					if (j == 0) firstId = sphereCPU->id;
-					//Sphere sphere{ sphereCPU->origin,sphereCPU->radius,sphereCPU->color };
-					//sphereSSBOs.push_back(sphere);
+					Sphere sphere{ sphereCPU->origin,sphereCPU->radius,sphereCPU->color };
+					sphereSSBOs.push_back(sphere);
 					//leafUBO.spheresIdx[j] = sphereCPU->id;
 					/* }
 					else {

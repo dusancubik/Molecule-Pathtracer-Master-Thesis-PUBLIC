@@ -1,3 +1,16 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: kdTreeConstructionStrategy.hpp
+ *
+ *  Description:
+ *  The KdTreeConstructionStrategy defines how the nodes of kd-tree are split during construction.
+ *
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 #include "Pipelines/renderPipelineInterface.hpp"
 struct sortSpheres

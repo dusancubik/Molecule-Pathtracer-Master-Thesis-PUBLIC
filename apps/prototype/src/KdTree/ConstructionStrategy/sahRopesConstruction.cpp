@@ -1,9 +1,9 @@
 #include "sahRopesConstruction.hpp"
 
-#define NODE_COST 3
-#define TEST_COST 5
+#define NODE_COST 2
+#define TEST_COST 4
 #define MAX_SPHERES 6
-#define MIN_AREA 30.f
+#define MIN_AREA 10.f
 std::vector<KdTreeNodeRopes*> SahRopesConstruction::constructTree(std::vector<SphereCPU*> spheres) {
 	std::cout << "constructing tree - SAH STRATEGY\n";
 	//std::vector<Sphere> spheresSorted = spheres;
@@ -21,9 +21,12 @@ std::vector<KdTreeNodeRopes*> SahRopesConstruction::constructTree(std::vector<Sp
 	//root->maxAABB = glm::vec3(713.5f, 598.f, 887.f);
 	//root->minAABB = glm::vec3(-20.5f, -2.f, -20.f);
 	//root->maxAABB = glm::vec3(20.5f, 20.f, 20.f);
-	root->minAABB = glm::vec3(scale *-300.7, scale *-243.845, scale *-217.98);
-	root->maxAABB = glm::vec3(scale *300.7, scale *243.845, scale *217.98);
-
+	root->minAABB = glm::vec3(-23.4575f, -27.485f, -16.63f);
+	root->maxAABB = glm::vec3(23.4575f, 27.485f, 16.63f);
+	//root->minAABB = glm::vec3(-43.8f, -43.5f, -33.f);
+	//root->maxAABB = glm::vec3(43.8f, 43.5f, 33.f);
+	//root->minAABB = glm::vec3(-43.8f, -43.5f, -33.f);
+	//root->maxAABB = glm::vec3(43.8f, 43.5f, 33.f);
 	int maxDepth = -1;
 	int spPerLeaf = 3;
 	int leavesCounter = 0;
@@ -336,8 +339,8 @@ SahDivision SahRopesConstruction::performSAH(std::vector<SphereCPU*> sortedSpher
 		std::cout << "initMinCost: " << TEST_COST * sortedSpheres.size() << "\n";
 		std::cout << "minCost: " << minCost << "\n";
 		SahDivision sd;
-		//if (sortedSpheres.size() <= MAX_SPHERES || initMinCost < minCost || areaMain <= MIN_AREA) {
-		if (initMinCost <= minCost || areaMain <= MIN_AREA) {
+		if (sortedSpheres.size() <= MAX_SPHERES || initMinCost < minCost || areaMain <= MIN_AREA) {
+		//if (initMinCost <= minCost || areaMain <= MIN_AREA) {
 			std::cout << "leaf best\n";
 			sd.A = sortedSpheres;
 			sd.B = sortedSpheres;
@@ -354,19 +357,11 @@ SahDivision SahRopesConstruction::performSAH(std::vector<SphereCPU*> sortedSpher
 				float radius = sortedSpheres[i]->radius;
 				if (pos <= minT || pos - radius <= minT) {
 					A.push_back(sortedSpheres[i]);
-					/*if (node->depth < 2) {
-						if (pos - radius < minT) {
-							B.push_back(sortedSpheres[i]);
-						}
-					}*/
+
 				}
 				if (pos > minT  || pos + radius > minT) {
 					B.push_back(sortedSpheres[i]);
-					/*if (node->depth < 2) {
-						if (pos + radius > minT) {
-							A.push_back(sortedSpheres[i]);
-						}
-					}*/
+
 				}
 			}
 			sd.A = A;
@@ -378,45 +373,7 @@ SahDivision SahRopesConstruction::performSAH(std::vector<SphereCPU*> sortedSpher
 		}
 		std::cout << "---------------------------\n";
 		return sd;
-	/*}
-	else {
-		float splitPoint = (sortedSpheres[sortedSpheres.size() / 2])->origin[dimSplit];
-
-		std::vector<SphereCPU*> A;
-		std::vector<SphereCPU*> B;
-		int countInA = 0;
-		for (int i = 0;i < sortedSpheres.size();i++) {
-			float pos = sortedSpheres[i]->origin[dimSplit];
-			float radius = sortedSpheres[i]->radius;
-			if (pos <= splitPoint ) {
-				A.push_back(sortedSpheres[i]);
-				
-			}
-			if (pos > splitPoint ) {
-				B.push_back(sortedSpheres[i]);
-				
-			}
-		}
-		SahDivision sd;
-		sd.A = A;
-		sd.B = B;
-		sd.dimension = dimSplit;
-		sd.cost = 2 * sortedSpheres.size();
-		sd.splitPoint = splitPoint;
-		return sd;
-	}*/
-	//for t cyklus: 
-		//
-		// 
-		// 
-		//for sphere? cyklus2:
-			//is sphere in A or B?
-			// 
-		//Compute volumus
-		//compute P_a && P_b
-		//compute cost
-		// is min? 
-		//t++
+	
 
 }
 
@@ -475,28 +432,6 @@ std::vector<SphereCPU*> SahRopesConstruction::getExtendingSpheres(std::vector<Sp
 
 }
 
-/*float SahConstruction::computeSurfaceArea(int dimension, glm::vec3 atributes) {
-	float width = atributes[0];
-	float height = atributes[1];
-	float length = atributes[2];
-	
-
-	switch (dimension) {
-		case 0:
-			return 2 * 
-		break;
-		case 1:
-
-		break;
-		case 2:
-
-		break;
-		default:
-			std::cout << "SAH:can't compute surface area: dimenation = -1\n";
-			return -1.f;
-		break;
-	}
-}*/
 
 
 std::tuple<int, int> SahRopesConstruction::getFaceIndexes(int dimension) {

@@ -47,7 +47,7 @@ namespace visitlab
  * @param 	argv	the program arguments.
  * @return	An int.
  */
-extern "C" int __main__(int argc, char* argv[])
+extern "C" int __main__PROTO(int argc, char* argv[])
 {
 	using namespace visitlab;
 	MainApplication application;
@@ -70,121 +70,11 @@ extern "C" int __main__(int argc, char* argv[])
 		application.onFrame();
 	}
 	std::cout << "finish\n";
-	/*glfw_factory.create(800, 600, "Visitlab Playground");
-	glfw_factory.show();
 	
-	
-
-	const bool result = context.initialize(glfw_factory, glfw_factory.get_width(), glfw_factory.get_height());
-	if (result)
-	{
-		// Setup Dear ImGui context
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO();
-		io.IniFilename = nullptr;
-
-		// Setup Dear ImGui style
-		ImGui::StyleColorsDark();
-
-		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForOther(glfw_factory.get_glfw_handle(), true);
-		ImGui_ImplWGPU_Init(context.get_device(), 3, context.get_default_swap_chain_format());
-		setup();
-
-		MainApplication application;
-		application.onInit(context.get_device(),glfw_factory);
-
-
-		glfw_factory.loop(redraw_local);
-	}
-
-	#ifndef __EMSCRIPTEN__ // TODO update to avoid using macros
-	// Shutdown the Platform/Renderer backends.
-	if (result)
-	{
-		ImGui_ImplWGPU_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-	}
-	#endif*/
 
 	return 0;
 }
 
 
 
-/*WGPUShaderModule loadShaderModule(const fs::path& path, WGPUDevice device) {
-	std::ifstream file(path);
-	if (!file.is_open()) {
-		std::cout << "Cannot load module" << std::endl;
-		return nullptr;
-	}
-	file.seekg(0, std::ios::end);
-	size_t size = file.tellg();
-	std::string shaderSource(size, ' ');
-	file.seekg(0);
-	file.read(shaderSource.data(), size);
 
-	WGPUShaderModuleWGSLDescriptor shaderCodeDesc = {};
-	shaderCodeDesc.chain.next = nullptr;
-	shaderCodeDesc.chain.sType = WGPUSType::WGPUSType_ShaderModuleWGSLDescriptor;
-	shaderCodeDesc.source = shaderSource.c_str();
-	WGPUShaderModuleDescriptor shaderDesc = {};
-	shaderDesc.nextInChain = &shaderCodeDesc.chain;
-#ifdef WEBGPU_BACKEND_WGPU
-	shaderDesc.hintCount = 0;
-	shaderDesc.hints = nullptr;
-#endif
-
-	return wgpuDeviceCreateShaderModule(device, &shaderDesc);
-}
-
-bool loadGeometry(const fs::path& path, std::vector<float>& pointData, std::vector<uint16_t>& indexData, int dimensions) {
-	std::ifstream file(path);
-	if (!file.is_open()) {
-		return false;
-	}
-
-	pointData.clear();
-	indexData.clear();
-
-	enum class Section {
-		None,
-		Points,
-		Indices,
-	};
-	Section currentSection = Section::None;
-
-	float value;
-	uint16_t index;
-	std::string line;
-	while (!file.eof()) {
-		getline(file, line);
-		if (line == "[points]") {
-			currentSection = Section::Points;
-		}
-		else if (line == "[indices]") {
-			currentSection = Section::Indices;
-		}
-		else if (line[0] == '#' || line.empty()) {
-			// Do nothing, this is a comment
-		}
-		else if (currentSection == Section::Points) {
-			std::istringstream iss(line);
-			// Get x, y, r, g, b
-			for (int i = 0; i < dimensions+3; ++i) {
-				iss >> value;
-				pointData.push_back(value);
-			}
-		}
-		else if (currentSection == Section::Indices) {
-			std::istringstream iss(line);
-			// Get corners #0 #1 and #2
-			for (int i = 0; i < 3; ++i) {
-				iss >> index;
-				indexData.push_back(index);
-			}
-		}
-	}
-	return true;
-}*/

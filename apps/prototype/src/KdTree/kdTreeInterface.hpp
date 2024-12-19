@@ -27,10 +27,4 @@ class KdTreeInterface :public IKdTree {
 
 		virtual std::vector<S> getSphereSSBOs() { return {}; }
 
-	/*protected:
-		std::vector<N> treeSSBOs;
-
-		std::vector<L> leavesUBOs;
-
-		std::vector<S> sphereSSBOs;*/
 };

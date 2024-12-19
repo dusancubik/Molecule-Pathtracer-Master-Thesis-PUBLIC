@@ -1,3 +1,18 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: kdTreeRopes.hpp
+ *
+ *  Description:
+ *  The KdTreeRopes class is responsible for constructing Kd-tree with ropes.
+ *  Rope construction is based on pseudocode from article https://www-sop.inria.fr/members/Stefan.Popov/media/StacklessKDTreeTraversal_EG07.pdf .
+ *
+ * -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "Pipelines/renderPipelineInterface.hpp"
 #include "ConstructionStrategy/kdTreeConstructionStrategy.hpp"

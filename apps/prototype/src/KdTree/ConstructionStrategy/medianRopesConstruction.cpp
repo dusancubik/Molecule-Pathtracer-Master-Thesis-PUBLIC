@@ -195,27 +195,4 @@ std::vector<SphereCPU*> MedianRopesConstruction::getExtendingSpheres(std::vector
 
 }
 
-/*float SahConstruction::computeSurfaceArea(int dimension, glm::vec3 atributes) {
-	float width = atributes[0];
-	float height = atributes[1];
-	float length = atributes[2];
-	
-
-	switch (dimension) {
-		case 0:
-			return 2 * 
-		break;
-		case 1:
-
-		break;
-		case 2:
-
-		break;
-		default:
-			std::cout << "SAH:can't compute surface area: dimenation = -1\n";
-			return -1.f;
-		break;
-	}
-}*/
-
 

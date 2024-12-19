@@ -1,3 +1,15 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: timeStamp.hpp
+ *
+ *  Description:
+ *  This Timestamp class is made to generate timestamps, helping to measure how long a shader takes to run.
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 
 #include <iostream>
@@ -9,15 +21,17 @@
 #include "backends/imgui_impl_wgpu.h"
 #include <memory>
 #include <vector>
+
+template <typename T>
 class Timestamp {
 public:
 	Timestamp(WGPUDevice device);
 	WGPUQuerySet getQuerySet() { return querySet; };
 	WGPUBuffer getQueryBuffer() { return queryBuffer; };
 	WGPUBuffer getStagingBuffer() { return stagingBuffer; };
-	WGPURenderPassTimestampWrite getTimestampBegin() { return timestampBegin; };
-	WGPURenderPassTimestampWrite getTimestampEnd() { return timestampEnd; };
-	std::vector<WGPURenderPassTimestampWrite> getTimestamps() { return timestamps; };
+	T getTimestampBegin() { return timestampBegin; };
+	T getTimestampEnd() { return timestampEnd; };
+	std::vector<T> getTimestamps() { return timestamps; };
 
 	void* timestampsData = nullptr;
 private:
@@ -29,10 +43,10 @@ private:
 
 	WGPUComputePassDescriptor computePassDescriptor;
 
-	WGPURenderPassTimestampWrite timestampBegin;
-	WGPURenderPassTimestampWrite timestampEnd;
+	T timestampBegin;
+	T timestampEnd;
 
-	std::vector<WGPURenderPassTimestampWrite> timestamps;
+	std::vector<T> timestamps;
 
 	
 };

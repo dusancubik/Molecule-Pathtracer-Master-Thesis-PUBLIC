@@ -9,7 +9,7 @@ class ComputeRenderer : public RendererBase {
 
 		void render(WGPUTextureView &nextTexture) override;
 
-        std::shared_ptr<Camera> getCamera() override { return camera; };
+        std::shared_ptr<PROTO_Camera> getCamera() override { return camera; };
 
         void setKdTree(std::shared_ptr<KdTreeRopes> _kdTree)  { kdTree = _kdTree; }
         
@@ -39,7 +39,7 @@ class ComputeRenderer : public RendererBase {
         //std::shared_ptr<Timestamp> timestamp;
 
         //Camera
-        std::shared_ptr<Camera> camera;
+        std::shared_ptr<PROTO_Camera> camera;
         bool initCamera();
 
         //static void readBufferMap(WGPUBufferMapAsyncStatus status, void* userdata);

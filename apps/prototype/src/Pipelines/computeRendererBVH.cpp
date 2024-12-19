@@ -1,32 +1,14 @@
 #include "computeRenderer.hpp"
 #include "../KdTree/kdTreeRopes.hpp"
-#include "../BVH/bvh4.cpp"
+#include "../BVH/bvh.cpp"
 bool ComputeRendererBVH::initCamera() {
-	camera = std::make_shared<Camera>(1280, 720, glm::vec3(0.f, 0.f, 3.0f));
+	camera = std::make_shared<PROTO_Camera>(1280, 720, glm::vec3(10.f, 20.f, 10.0f));
 	return true;
 }
 
 
 
-/*void ComputeRenderer::initBindGroup(WGPUBindGroup& bindGroup, WGPUBindGroupLayout bindGroupLayout) {
-	// Create a binding
-	// 
-	std::vector<WGPUBindGroupEntry> binding(1);
 
-	createBindGroupEntry(binding[0],0, uniformBuffer,0, sizeof(CameraUBO) );
-
-	
-	// A bind group contains one or multiple bindings
-	WGPUBindGroupDescriptor bindGroupDesc = {};
-	bindGroupDesc.nextInChain = nullptr;
-	bindGroupDesc.layout = bindGroupLayout;
-	// There must be as many bindings as declared in the layout!
-	bindGroupDesc.entryCount = 1;
-	bindGroupDesc.entries = binding.data();//&binding;
-	bindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
-
-
-}*/
 
 void ComputeRendererBVH::initRaytracingBindGroup(WGPUBindGroup& bindGroup, WGPUBindGroupLayout bindGroupLayout) {
 	std::vector<WGPUBindGroupEntry> binding(4);
@@ -43,12 +25,11 @@ void ComputeRendererBVH::initRaytracingBindGroup(WGPUBindGroup& bindGroup, WGPUB
 	createBindGroupEntry(binding[1], 1, bvhStorageBuffer, 0, sizeof(BVHNodeSSBO) * bvh->getBVHSSBOs().size());
 	createBindGroupEntry(binding[2], 2, spheresStorageBuffer, 0, sizeof(Sphere) * bvh->getSpheres().size());
 	createBindGroupEntry(binding[3], 3, uniformBuffer, 0, sizeof(CameraUBO));
-	//createBindGroupEntry(binding[3], 3, spheresStorageBuffer, 0, sizeof(Sphere) * kdTree->getSphereSSBOs().size());
-	// A bind group contains one or multiple bindings
+	
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = bindGroupLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 4;
 	bindGroupDesc.entries = binding.data();//&binding;
 	bindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
@@ -71,11 +52,11 @@ void ComputeRendererBVH::initScreenBindGroup(WGPUBindGroup& bindGroup, WGPUBindG
 	
 	binding[1].textureView = color_buffer_view;
 
-	// A bind group contains one or multiple bindings
+	
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = bindGroupLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 2;
 	bindGroupDesc.entries = binding.data();//&binding;
 	bindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
@@ -103,14 +84,20 @@ void ComputeRendererBVH::render(WGPUTextureView &nextTexture) {
 	WGPUComputePassDescriptor computePassDesc = {};
 	computePassDesc.nextInChain = nullptr;
 	
+
+	std::vector<WGPURenderPassTimestampWrite> timestampWritess = timestamp->getTimestamps();
+	computePassDesc.timestampWriteCount = 0;//2
+	computePassDesc.timestampWrites = nullptr;//timestampWritess.data();
+	wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 0);
 	WGPUComputePassEncoder raytracingPass = wgpuCommandEncoderBeginComputePass(encoder, &computePassDesc);
 	wgpuComputePassEncoderSetPipeline(raytracingPass, raytracingPipeline);
 	wgpuComputePassEncoderSetBindGroup(raytracingPass, 0, raytracingBindGroup, 0, nullptr);
 
-	wgpuComputePassEncoderDispatchWorkgroups(raytracingPass, 1024/8, 1024/4, 1);
+	wgpuComputePassEncoderDispatchWorkgroups(raytracingPass, 1280/8, 720/4, 1);
 
 	wgpuComputePassEncoderEnd(raytracingPass);
-
+	wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 1);
+	wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
 	WGPURenderPassDescriptor renderPassDesc = {};
 	renderPassDesc.nextInChain = nullptr;
 
@@ -141,71 +128,6 @@ void ComputeRendererBVH::render(WGPUTextureView &nextTexture) {
 	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, &cmdBufferDesc);
 	wgpuQueueSubmit(queue, 1, &commandBuffer);
 
-	
-	/*WGPURenderPassDescriptor renderPassDesc = {};
-	renderPassDesc.nextInChain = nullptr;
-
-	WGPURenderPassColorAttachment renderPassColorAttachment = {};
-	renderPassColorAttachment.view = nextTexture;
-	renderPassColorAttachment.resolveTarget = nullptr;
-	renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
-	renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-	renderPassColorAttachment.clearValue = WGPUColor{ 0.05, 0.05, 0.05, 1.0 };
-	renderPassDesc.colorAttachmentCount = 1;
-	renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-	WGPURenderPassDepthStencilAttachment depthStencilAttachment;
-	depthStencilAttachment.view = depthTextureView;
-
-	// The initial value of the depth buffer, meaning "far"
-	depthStencilAttachment.depthClearValue = 1.0f;
-	// Operation settings comparable to the color attachment
-	depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
-	depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
-	// we could turn off writing to the depth buffer globally here
-	depthStencilAttachment.depthReadOnly = false;
-
-	// Stencil setup, mandatory but unused
-	depthStencilAttachment.stencilClearValue = 0;
-	depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
-	depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
-	depthStencilAttachment.stencilReadOnly = true;
-
-	//renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
-	std::vector<WGPURenderPassTimestampWrite> timestampWritess = timestamp->getTimestamps();
-	renderPassDesc.timestampWriteCount = 0;//2;
-	renderPassDesc.timestampWrites = nullptr;//timestampWritess.data();
-	wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 0);
-	WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
-	//wgpuRenderPassEncoderWriteTimestamp(renderPass, timestamp->getQuerySet(), 0);
-
-	
-	wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
-	// Draw 1 instance of a 3-vertices shape
-	wgpuRenderPassEncoderSetBindGroup(renderPass, 0, bindGroup, 0, nullptr);
-
-	//wgpuRenderPassEncoderWriteTimestamp(renderPass, timestamp->getQuerySet(), 0);
-
-	//wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 0);
-	wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
-	
-	wgpuRenderPassEncoderEnd(renderPass);
-	//wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 1);
-
-	wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 1);
-
-	wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
-
-
-
-
-	//wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
-	WGPUCommandBufferDescriptor cmdBufferDesc = {};
-	cmdBufferDesc.nextInChain = nullptr;
-	cmdBufferDesc.label = "Command buffer";
-	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, &cmdBufferDesc);
-	wgpuQueueSubmit(queue, 1, &commandBuffer);
-
 	//wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
 	//copy timestamps
 	commandEncoderDesc.nextInChain = nullptr;
@@ -222,7 +144,7 @@ void ComputeRendererBVH::render(WGPUTextureView &nextTexture) {
 
 		//auto callback = std::bind(&MainApplication::readBufferMap,this);
 		wgpuBufferMapAsync(timestamp->getStagingBuffer(), WGPUMapMode_Read, 0, sizeof(int64_t) * 2, &readBufferMap, this);
-	}*/
+	}
 }
 
 void ComputeRendererBVH::init(std::vector<SphereCPU*> _spheres, WGPUDevice _device, WGPUQueue _queue, WGPUTextureFormat _swap_chain_default_format) {
@@ -265,9 +187,9 @@ void ComputeRendererBVH::init(std::vector<SphereCPU*> _spheres, WGPUDevice _devi
 
 	sampler = wgpuDeviceCreateSampler(device, &samplerDescriptor);
 
-	screenShaderModule = ResourceManager::loadShaderModule("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\shaders\\compute\\BVH\\screen_shader.wgsl", device);
+	screenShaderModule = ResourceManager::loadShaderModule("shaders_prototype\\compute\\BVH\\screen_shader.wgsl", device);
 	
-	raytracingKernelModule = ResourceManager::loadShaderModule("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\shaders\\compute\\BVH\\raytracing_kernel_bvh.wgsl", device);
+	raytracingKernelModule = ResourceManager::loadShaderModule("shaders_prototype\\compute\\BVH\\raytracing_bvh.wgsl", device);
 
 	std::vector<WGPUBindGroupLayoutEntry> raytracingBindingLayout(4);
 
@@ -295,7 +217,7 @@ void ComputeRendererBVH::init(std::vector<SphereCPU*> _spheres, WGPUDevice _devi
 	raytracingPipelineDesc.compute.module = raytracingKernelModule;
 	raytracingPipelineDesc.compute.entryPoint = "main";
 
-	// Pipeline layout
+	
 	WGPUPipelineLayoutDescriptor layoutDesc = {};
 	//layoutDesc.nextInChain = nullptr;
 	layoutDesc.bindGroupLayoutCount = 1;
@@ -338,14 +260,14 @@ void ComputeRendererBVH::init(std::vector<SphereCPU*> _spheres, WGPUDevice _devi
 	screenPipelineDesc.nextInChain = nullptr;
 
 	screenPipelineDesc.vertex.module = screenShaderModule;
-	screenPipelineDesc.vertex.entryPoint = "vert_main";
+	screenPipelineDesc.vertex.entryPoint = "vs_main";
 
 	//fragment
 	WGPUFragmentState fragmentState = {};
 	fragmentState.nextInChain = nullptr;
 	screenPipelineDesc.fragment = &fragmentState;
 	fragmentState.module = screenShaderModule;
-	fragmentState.entryPoint = "frag_main";
+	fragmentState.entryPoint = "fs_main";
 	fragmentState.constantCount = 0;
 	fragmentState.constants = nullptr;
 
@@ -354,11 +276,11 @@ void ComputeRendererBVH::init(std::vector<SphereCPU*> _spheres, WGPUDevice _devi
 	screenPipelineDesc.multisample.count = 1;
 
 	WGPUBlendState blendState;
-	// Usual alpha blending for the color:
+	
 	blendState.color.srcFactor = WGPUBlendFactor_SrcAlpha;
 	blendState.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
 	blendState.color.operation = WGPUBlendOperation_Add;
-	// We leave the target alpha untouched:
+	
 	blendState.alpha.srcFactor = WGPUBlendFactor_Zero;
 	blendState.alpha.dstFactor = WGPUBlendFactor_One;
 	blendState.alpha.operation = WGPUBlendOperation_Add;
@@ -377,7 +299,7 @@ void ComputeRendererBVH::init(std::vector<SphereCPU*> _spheres, WGPUDevice _devi
 	screenPipelineDesc.primitive.frontFace = WGPUFrontFace_CCW;
 	screenPipelineDesc.primitive.cullMode = WGPUCullMode_None;
 
-	// Pipeline layout
+	
 	WGPUPipelineLayoutDescriptor screenLayoutDesc = {};
 	//layoutDesc.nextInChain = nullptr;
 	screenLayoutDesc.bindGroupLayoutCount = 1;

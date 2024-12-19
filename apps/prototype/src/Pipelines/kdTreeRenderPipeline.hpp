@@ -1,16 +1,29 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: kdTreeRenderPipeline.hpp
+ *
+ *  Description:
+ *  The KdTreeRenderPipeline is derived from RendererBase and handles rendering pipeline for Kd-Tree with sequential traversal.
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
+#include "rendererBase.hpp"
 #include "renderPipelineInterface.hpp"
 #include "../KdTree/kdTree.hpp"
 
-class KdTreeRenderPipeline : public RenderPipelineInterface {
+class KdTreeRenderPipeline : public RendererBase/*RenderPipelineInterface*/ {
 	public:
 		void init(std::vector<SphereCPU*> _spheres, WGPUDevice _device, WGPUQueue _queue, WGPUTextureFormat _swap_chain_default_format) override;
 
 		void render(WGPUTextureView &nextTexture) override;
 
-        int getFrameTimeNS() { return frameTimeNS; }
+        //int getFrameTimeNS() { return frameTimeNS; }
 
-        std::shared_ptr<Camera> getCamera() { return camera; };
+        std::shared_ptr<PROTO_Camera> getCamera() { return camera; };
 
         void setKdTree(std::shared_ptr<KdTree> _kdTree) { kdTree = _kdTree; }
 	private:
@@ -44,14 +57,14 @@ class KdTreeRenderPipeline : public RenderPipelineInterface {
         std::vector<SphereCPU*> spheres;
         WGPUBuffer spheresStorageBuffer = nullptr;
         //Timestamp
-        std::shared_ptr<Timestamp> timestamp;
+        std::shared_ptr<Timestamp<WGPURenderPassTimestampWrite>> timestamp;
 
         //Camera
-        std::shared_ptr<Camera> camera;
+        std::shared_ptr<PROTO_Camera> camera;
         bool initCamera();
 
         static void readBufferMap(WGPUBufferMapAsyncStatus status, void* userdata);
-        int frameTimeNS = 0;
+        //int frameTimeNS = 0;
         //kdTree
         std::shared_ptr<KdTree> kdTree;
 

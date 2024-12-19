@@ -1,3 +1,17 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: MainApplication.hpp
+ *
+ *  Description:
+ *  The MainApplication class serves as the core of the application.
+ *  It manages the application's initialization, sets up the Renderer class, and handles input and user interface interactions.
+ *  Also, it instructs the MoleculeLoader to load atoms.
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 #include <iostream>
 #include "application.h"
@@ -18,7 +32,6 @@
 #include "Pipelines/computeRenderer.hpp"
 #include "Pipelines/computeRendererBVH.hpp"
 #include "Pipelines/bvhFragmentRenderer.hpp"
-#include "Pipelines/bvh4FragmentRenderer.hpp"
 #include "Pipelines/kdTreeRenderPipeline.hpp"
 #include "Pipelines/kdTreeRopesRenderPipeline.hpp"
 #include "Pipelines/computeRendererBVH_accumulator.hpp"
@@ -46,15 +59,14 @@ public:
     using vec4 = glm::vec4;
     using vec3 = glm::vec3;
     using vec2 = glm::vec2;
-    // A function called only once at the beginning. Returns false is init failed.
+    
     bool onInit(int width, int height);
 
-    // A function called at each frame, guaranteed never to be called before `onInit`.
+    
     void onFrame();
 
     void update(float delta);
 
-    // A function called only once at the very end.
     void onFinish();
 
     bool isRunning();
@@ -70,7 +82,7 @@ public:
         //vec2 uv;
     };
 
-    //input handling
+
     void keyPressed(int key, int scancode, int action, int mods);
     void onMouseMove(double x, double y);
     void onMouseButton(int key, int action, int mods);
@@ -82,9 +94,7 @@ private:
     using vec4 = glm::vec4;
     using vec3 = glm::vec3;
     using vec2 = glm::vec2;
-    // Everything that is initialized in `onInit` and needed in `onFrame`.
-    //wgpu::Instance m_instance = nullptr;
-    //wgpu::Surface m_surface = nullptr;
+
     float randomFloat(float a, float b);
 
     bool initWindowAndDevice(int width, int height);
@@ -97,10 +107,9 @@ private:
     WGPUDevice device;
     glfw::GLFWFactory glfw_factory;
     webgpu::WGPUContext context;
-    // [...]
+
 
     struct MyUniforms {
-        // We add transform matrices
         mat4x4 projectionMatrix;
         mat4x4 viewMatrix;
         mat4x4 modelMatrix;
@@ -108,36 +117,33 @@ private:
         float time;
         float _pad[3];
     };
-    //Camera
-    std::shared_ptr<Camera> camera;
+    
+    std::shared_ptr<PROTO_Camera> camera;
     bool initCamera();
-    // Depth Buffer
+    
     WGPUTextureFormat depthTextureFormat = WGPUTextureFormat_Depth24Plus;
     WGPUTexture depthTexture = nullptr;
     WGPUTextureView depthTextureView = nullptr;
     WGPUDepthStencilState depthStencilState{};
-    // Render Pipeline
+    
     WGPUBindGroupLayout bindGroupLayout = nullptr;
     WGPUShaderModule shaderModule = nullptr;
     WGPURenderPipeline pipeline = nullptr;
 
-    // Texture
-    /*wgpu::Sampler m_sampler = nullptr;
-    wgpu::Texture m_texture = nullptr;
-    wgpu::TextureView m_textureView = nullptr;*/
 
-    // Geometry
+
+    
     WGPUBuffer indexBuffer = nullptr;
     WGPUBuffer vertexBuffer = nullptr;
     int m_vertexCount = 0;
     std::vector<float> vertexData;
     std::vector<uint16_t> indexData;
     int indexCount = 0;
-    // Uniforms
+    
     WGPUBuffer uniformBuffer = nullptr;
     MyUniforms uniforms;
 
-    // Bind Group
+    
     WGPUBindGroup bindGroup = nullptr;
 
     
@@ -150,7 +156,7 @@ private:
     bool usingKdTree = false;
 
     //Timestamp
-    std::shared_ptr<Timestamp> timestamp;
+    std::shared_ptr<Timestamp<WGPURenderPassTimestampWrite>> timestamp;
     //void readBufferMap(WGPUBufferMapAsyncStatus status, void *userdata);
 
     //rendering

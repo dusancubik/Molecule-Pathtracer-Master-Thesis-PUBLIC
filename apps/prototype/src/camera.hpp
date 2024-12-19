@@ -1,3 +1,17 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: PROTO_Camera.hpp
+ *
+ *  Description:
+ *  The PROTO_Camera class represents a camera, handling its position, orientation based on user's mouse movement.
+ *  The PROTO_Camera class is based on the implementation and concepts from LearnOpenGL's Camera tutorial
+ *  (https://learnopengl.com/Getting-started/Camera).
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 #include <iostream>
 #include"glm/glm.hpp"
@@ -18,7 +32,7 @@ struct CameraUBO {
 	glm::mat4 inversePV;
 };
 
-class Camera
+class PROTO_Camera
 {
 	float lastX = 400, lastY = 300;
 public:
@@ -27,21 +41,20 @@ public:
 		did_move = false;
 		return tmp;
 	}
-	// Stores the main vectors of the camera
+
 	glm::vec3 position;
 	glm::vec3 orientation = glm::vec3(0.0f, 0.0f, 0.f);
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::mat4 view = glm::mat4(1.0f);
 	CameraUBO cameraUBO = { .projection = glm::mat4(1.0f),.view = glm::mat4(1.0f),.position = glm::vec4(0.0f),.inversePV = glm::mat4(1.0f) };
-	// Prevents the camera from jumping around when first clicking left click
+
 	bool firstClick = true;
 
-	// Stores the width and height of the window
-	//default?
+
 	int width = 800;
 	int height = 600;
 	//1280,860
-		// Adjust the speed of the camera and it's sensitivity when looking around
+
 	float speed = 0.001f;
 	float sensitivity = 100.0f;
 
@@ -50,23 +63,20 @@ public:
 	float farPlane = 0;
 
 	float yaw = 0.f;
-	float pitch = 0.f;
+	float pitch = 35.f;
 
 	bool is_zooming = false;
-	float distance = 150.f;
+	float distance = 55.f;
 	bool did_move = false;
-	// Camera constructor to set up initial values
-	Camera(int width, int height, glm::vec3 _position);
-	//Camera() {};
-	// Updates and exports the camera matrix to the Vertex Shader
+	
+	PROTO_Camera(int width, int height, glm::vec3 _position);
+	
 	void initCameraUBO(float FOVdeg, float nearPlane, float farPlane);
 
 	glm::mat4 getViewMat() { return view; }
 	glm::vec3 getPosition() { return position; };
 	glm::vec3 getOrientation() { return orientation; };
-	//void updateCameraUBO(float FOVdeg, float nearPlane, float farPlane);
-	// Handles camera inputs
-	//void Inputs(GLFWwindow* window);
+
 	CameraUBO* getCameraUbo() { return &cameraUBO; }
 	void updateCamera();
 

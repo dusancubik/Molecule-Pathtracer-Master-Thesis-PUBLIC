@@ -10,11 +10,10 @@
 #include "Factories/kdTreeStandardFactory.cpp"
 #include "Factories/kdTreeRopesFactory.cpp"
 #include "Pipelines/bvhFragmentRenderer.cpp"
-#include "Pipelines/bvh4FragmentRenderer.cpp"
 #include "Pipelines/computeRendererBVH_accumulator.cpp"
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void cursorPosCallback(GLFWwindow* window, double x, double y);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+void PROTO_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void PROTO_cursorPosCallback(GLFWwindow* window, double x, double y);
+void PROTO_mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 /*void gg(WGPUBufferMapAsyncStatus status, void* userdata) {
 	int32_t* times =
 		(int32_t*)wgpuBufferGetMappedRange(timestamp->getStagingBuffer(), 0, 8 * 2);
@@ -52,10 +51,10 @@ bool MainApplication::onInit(int width, int height) {
 	std::srand(std::time(nullptr));
 
 
-	//spheres = ResourceManager::loadAtoms("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\data\\1aon.pdb");
+	spheres = ResourceManager::loadAtoms("resources\\Proteins\\1fjk.pdb");
 	//return false;
 	
-	spheres = generateSpheres(50);
+	//spheres = generateSpheres(50);
 	
 	
 
@@ -63,12 +62,12 @@ bool MainApplication::onInit(int width, int height) {
 	
 	//init glfw  keys
 	glfwSetWindowUserPointer(glfw_factory.get_glfw_handle(), this);
-	glfwSetKeyCallback(glfw_factory.get_glfw_handle(), key_callback);
-	glfwSetCursorPosCallback(glfw_factory.get_glfw_handle(), cursorPosCallback);
-	glfwSetMouseButtonCallback(glfw_factory.get_glfw_handle(), mouse_button_callback);
+	glfwSetKeyCallback(glfw_factory.get_glfw_handle(), PROTO_key_callback);
+	glfwSetCursorPosCallback(glfw_factory.get_glfw_handle(), PROTO_cursorPosCallback);
+	glfwSetMouseButtonCallback(glfw_factory.get_glfw_handle(), PROTO_mouse_button_callback);
 	glfwSetInputMode(glfw_factory.get_glfw_handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	
+	//kd tree Seq
 	/*KdTreeStandardFactory kdTreeStandardFactory;
 	kdTreeRenderPipeline = kdTreeStandardFactory.createRenderPipeline();
 	std::shared_ptr<KdTree> kd = kdTreeStandardFactory.createKdTree();
@@ -77,7 +76,7 @@ bool MainApplication::onInit(int width, int height) {
 	kdTreeRenderPipeline->init(spheres, context.get_device(), context.get_queue(), context.get_default_swap_chain_format());
 	currentRenderPipeline = kdTreeRenderPipeline;*/
 	
-	
+	//Kd tree ropes
 	/*KdTreeRopesFactory kdTreeRopesFactory;
 	kdTreeRopesRenderPipeline = kdTreeRopesFactory.createRenderPipeline();
 	std::shared_ptr<KdTreeRopes> kd = kdTreeRopesFactory.createKdTree();
@@ -90,8 +89,8 @@ bool MainApplication::onInit(int width, int height) {
 	//kdTreeRopesRenderPipeline = std::make_shared<KdTreeRopesRenderPipeline>();//kdTreeRopesFactory.createRenderPipeline();
 	
 	
-
-	/*std::shared_ptr<BVH> bvh = std::make_shared<BVH>();
+	//BVH shared
+	/*std::shared_ptr<PROTO_BVH> bvh = std::make_shared<PROTO_BVH>();
 	std::shared_ptr<ComputeRendererBVH> cr = std::make_shared<ComputeRendererBVH>();
 
 	cr->setBVH(bvh);
@@ -99,7 +98,7 @@ bool MainApplication::onInit(int width, int height) {
 	cr->init(spheres, context.get_device(), context.get_queue(), context.get_default_swap_chain_format());
 	currentRenderPipeline = cr;*/
 	
-	std::shared_ptr<BVH> bvh = std::make_shared<BVH>();
+	std::shared_ptr<PROTO_BVH> bvh = std::make_shared<PROTO_BVH>();
 	std::shared_ptr<ComputeRendererBVHAccumulator> cr = std::make_shared<ComputeRendererBVHAccumulator>();
 
 	cr->setBVH(bvh);
@@ -107,7 +106,8 @@ bool MainApplication::onInit(int width, int height) {
 	cr->init(spheres, context.get_device(), context.get_queue(), context.get_default_swap_chain_format());
 	currentRenderPipeline = cr;
 
-	/*std::shared_ptr<BVH> bvh = std::make_shared<BVH>();
+	//BVH FRAG
+	/*std::shared_ptr<PROTO_BVH> bvh = std::make_shared<PROTO_BVH>();
 	std::shared_ptr<BVHFragmentRenderer> cr = std::make_shared<BVHFragmentRenderer>();
 
 	cr->setBVH(bvh);
@@ -122,13 +122,13 @@ bool MainApplication::onInit(int width, int height) {
 	cr->init(spheres, context.get_device(), context.get_queue(), context.get_default_swap_chain_format());
 	currentRenderPipeline = cr;
 	*/
-	//renderTimer = true;
+	renderTimer = true;
 	for (int i = 0;i < spheres.size();i++) free(spheres[i]);
 
 	return true;
 }
 bool MainApplication::initCamera() {
-	camera = std::make_shared<Camera>(1280, 720, glm::vec3(0.f, 0.f, 300.0f));
+	camera = std::make_shared<PROTO_Camera>(1280, 720, glm::vec3(1.f, 0.f, 1.0f));
 	return true;
 }
 bool MainApplication::isRunning() {
@@ -137,12 +137,13 @@ bool MainApplication::isRunning() {
 
 void MainApplication::update(float delta) {
 	fps_cpu = 1000 / delta;
+
 }
 
 void MainApplication::onFrame() {
 
 
-	//camera->updateCamera();
+	//currentRenderPipeline->getCamera()->onMouseMove(0.,0.);
 	//wgpuQueueWriteBuffer(context.get_queue(), uniformBuffer, 0, camera->getCameraUbo(), sizeof(CameraUBO));
 	
 	WGPUTextureView nextTexture = wgpuSwapChainGetCurrentTextureView(context.get_swap_chain());
@@ -166,9 +167,7 @@ void MainApplication::readBufferMap(WGPUBufferMapAsyncStatus status, void *userd
 	MainApplication* pThis = (MainApplication*)userdata;
 	int64_t* times =
 		(int64_t*)wgpuBufferGetConstMappedRange(pThis->timestamp->getStagingBuffer(), 0,sizeof(int64_t) * 2);
-	//WGPUProcBufferGetMappedRange()
-	//WGPUProcBufferGetConstMappedRange();
-	//wgpuBufferGetCon
+
 		
 	if (times != nullptr) {
 		std::cout << "Frametime: " << (times[1] - times[0]) << "\n";
@@ -178,10 +177,7 @@ void MainApplication::readBufferMap(WGPUBufferMapAsyncStatus status, void *userd
 	wgpuBufferUnmap(pThis->timestamp->getStagingBuffer());
 	//mapped
 }
-/*void MainApplication::onFinish() {
-	//std::cout << "MainApplication created\n";
-	//return true;
-}*/
+
 
 bool MainApplication::initWindowAndDevice(int width, int height) {
 	glfw_factory.create(width, height, "Visitlab Playground");
@@ -194,38 +190,34 @@ bool MainApplication::initWindowAndDevice(int width, int height) {
 		ImGuiIO& io = ImGui::GetIO();
 		io.IniFilename = nullptr;
 
-		// Setup Dear ImGui style
+		
 		ImGui::StyleColorsDark();
 
-		// Setup Platform/Renderer backends
+		
 		ImGui_ImplGlfw_InitForOther(glfw_factory.get_glfw_handle(), true);
 		ImGui_ImplWGPU_Init(context.get_device(), 3, context.get_default_swap_chain_format());
 
-		//glfw_factory.loop(onFrame);
-		//glfw_factory.
+
 		return true;
 	}
 	return false;
 }
 
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void PROTO_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	auto* application = static_cast<MainApplication*>(glfwGetWindowUserPointer(window));
 
 	application->keyPressed(key, scancode, action, mods);
-	//application->keyPressed(key, scancode, action, mods);
-	/*if (key == GLFW_KEY_SPACE) {
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}*/
+
 }
 
-void cursorPosCallback(GLFWwindow* window, double x, double y) {
+void PROTO_cursorPosCallback(GLFWwindow* window, double x, double y) {
 	auto* application = static_cast<MainApplication*>(glfwGetWindowUserPointer(window));
 	application->onMouseMove(x, y);
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+void PROTO_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	auto* application = static_cast<MainApplication*>(glfwGetWindowUserPointer(window));
 	application->onMouseButton(button,action,mods);
@@ -252,8 +244,8 @@ void MainApplication::onMouseButton(int key, int action, int mods)
 
 
 void MainApplication::onMouseMove(double x, double y) {
-	
 	currentRenderPipeline->getCamera()->onMouseMove(x, y);
+	
 	
 }
 
@@ -269,9 +261,11 @@ void MainApplication::render_ui(WGPURenderPassEncoder* renderPass) {
 	ImGui::SetNextWindowSize(ImVec2(320, 120), ImGuiCond_Always);
 	//ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {800.f,600.f });
 	
-	ImGui::Begin("My First Tool", nullptr, ImGuiWindowFlags_NoDecoration);
+	ImGui::Begin("Prototype", nullptr, ImGuiWindowFlags_NoDecoration);
 	ImGui::Text(std::to_string(fps_cpu).c_str());
-	ImGui::Text(renderTimer? std::to_string(currentRenderPipeline->getFrameTimeNS()).c_str() : "0");
+	//ImGui::Text(renderTimer? std::to_string(currentRenderPipeline->getFrameTimeNS()).c_str() : "0");
+	ImGui::Text(std::to_string(currentRenderPipeline->getFrameTimeNS()).c_str());
+	//std::cout << "render_ui: getFrameTimeNS: " << currentRenderPipeline->getFrameTimeNS() << "\n";
 	const char* items[] = { "Basic", "KdTree" };
 	static const char* current_item = "Basic";
 	int n = usingKdTree ? 1 : 0;

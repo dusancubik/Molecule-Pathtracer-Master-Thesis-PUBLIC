@@ -40,6 +40,6 @@ class RenderPipelineInterface {
 
 		virtual void render(WGPUTextureView& nextTexture) = 0;
 
-		virtual std::shared_ptr<Camera> getCamera() = 0;
+		virtual std::shared_ptr<PROTO_Camera> getCamera() = 0;
 
 };

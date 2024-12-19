@@ -5,7 +5,7 @@ void RendererBase::init(std::vector<SphereCPU*> _spheres, WGPUDevice _device, WG
 	device = _device;
 	queue = _queue;
 	swap_chain_default_format = _swap_chain_default_format;
-	timestamp = std::make_shared<Timestamp>(device);
+	timestamp = std::make_shared<Timestamp<WGPURenderPassTimestampWrite>>(device);
 }
 
 void RendererBase::createBuffer(WGPUBuffer &buffer,WGPUBufferUsageFlags flags,uint64_t size,const void *data) {
@@ -16,7 +16,7 @@ void RendererBase::createBuffer(WGPUBuffer &buffer,WGPUBufferUsageFlags flags,ui
 	buffer = wgpuDeviceCreateBuffer(device, &bufferDesc);
 
 
-	// Upload the initial value of the uniforms
+	
 	wgpuQueueWriteBuffer(queue, buffer, 0, data, size);
 }
 
@@ -24,21 +24,20 @@ void RendererBase::createBuffer(WGPUBuffer &buffer,WGPUBufferUsageFlags flags,ui
 
 void RendererBase::createBindGroupEntry(WGPUBindGroupEntry& bindGroupEntry, uint32_t binding, WGPUBuffer buffer, uint64_t offset, uint64_t size) {
 	bindGroupEntry.nextInChain = nullptr;
-	// The index of the binding (the entries in bindGroupDesc can be in any order)
+	
 	bindGroupEntry.binding = binding;
-	// The buffer it is actually bound to
+	
 	bindGroupEntry.buffer = buffer;
-	// We can specify an offset within the buffer, so that a single buffer can hold
-	// multiple uniform blocks.
+	
 	bindGroupEntry.offset = offset;
-	// And we specify again the size of the buffer.
+	
 	bindGroupEntry.size = size;
 }
 
 
 void RendererBase::createBindingLayout(uint32_t binding, uint64_t minBindingSize, WGPUBindGroupLayoutEntry& bindingLayout, WGPUBufferBindingType bufferType, WGPUShaderStageFlags shaderFlags) {
 
-	//WGPUBindGroupLayoutEntry bindingLayout;
+	
 
 	bindingLayout.buffer.nextInChain = nullptr;
 	bindingLayout.buffer.type = WGPUBufferBindingType_Undefined;
@@ -56,11 +55,11 @@ void RendererBase::createBindingLayout(uint32_t binding, uint64_t minBindingSize
 	bindingLayout.texture.multisampled = false;
 	bindingLayout.texture.sampleType = WGPUTextureSampleType_Undefined;
 	bindingLayout.texture.viewDimension = WGPUTextureViewDimension_Undefined;
-	// The binding index as used in the @binding attribute in the shader
+	
 	bindingLayout.binding = binding;
-	// The stage that needs to access this resource
-	bindingLayout.visibility = shaderFlags;//ShaderStage::Vertex;
-	bindingLayout.buffer.type = bufferType; //BufferBindingType::Uniform;
+	
+	bindingLayout.visibility = shaderFlags;
+	bindingLayout.buffer.type = bufferType;
 	bindingLayout.buffer.minBindingSize = minBindingSize;
 
 	//return bindingLayout;
@@ -75,11 +74,11 @@ void RendererBase::readBufferMap(WGPUBufferMapAsyncStatus status, void* userdata
 	//wgpuBufferGetCon
 
 	if (times != nullptr) {
-		//std::cout << "Frametime: " << (times[1] - times[0]) << "\n";
+		std::cout << "Frametime: " << (times[1] - times[0]) << "\n";
 		pThis->frameTimeNS = (times[1] - times[0]);
 	}
 
-	//std::cout << "readBufferMap callback" << "\n";
+	std::cout << "readBufferMap callback" << "\n";
 	wgpuBufferUnmap(pThis->timestamp->getStagingBuffer());
 
 }
@@ -93,27 +92,27 @@ void RendererBase::initDepthBuffer() {
 	depthStencilState.depthBias = 0;
 	depthStencilState.depthBiasSlopeScale = 0;
 	depthStencilState.depthBiasClamp = 0;
-	//front
+	
 	depthStencilState.stencilFront.compare = WGPUCompareFunction_Always;
 	depthStencilState.stencilFront.failOp = WGPUStencilOperation_Keep;
 	depthStencilState.stencilFront.depthFailOp = WGPUStencilOperation_Keep;
 	depthStencilState.stencilFront.passOp = WGPUStencilOperation_Keep;
 
-	//back
+	
 	depthStencilState.stencilBack.compare = WGPUCompareFunction_Always;
 	depthStencilState.stencilBack.failOp = WGPUStencilOperation_Keep;
 	depthStencilState.stencilBack.depthFailOp = WGPUStencilOperation_Keep;
 	depthStencilState.stencilBack.passOp = WGPUStencilOperation_Keep;
 
 
-	//
+	
 	depthStencilState.depthCompare = WGPUCompareFunction_Less;
 	depthStencilState.depthWriteEnabled = true;
 
-	// Store the format in a variable as later parts of the code depend on it
+	
 	depthTextureFormat = WGPUTextureFormat_Depth24Plus;
 	depthStencilState.format = depthTextureFormat;
-	// Deactivate the stencil alltogether
+	
 	depthStencilState.stencilReadMask = 0;
 	depthStencilState.stencilWriteMask = 0;
 

@@ -18,8 +18,15 @@ std::vector<KdTreeNode_new*> SahConstruction::constructTree(std::vector<SphereCP
 	//root->minAABB = glm::vec3(20. * -200.f, 20. * -200.f, 20. * -200.f);
 	//root->maxAABB = glm::vec3(20. * 200.f, 20. * 200.f, 20. * 200.f);
 	float scale = 1.f;
-	root->minAABB = glm::vec3(scale *-300.7, scale *-243.845, scale *-217.98);
-	root->maxAABB = glm::vec3(scale * 300.7, scale * 243.845, scale * 217.98);
+	root->minAABB = glm::vec3(-23.4575f, -27.485f, -16.63f);
+	root->maxAABB = glm::vec3(23.4575f, 27.485f, 16.63f);
+	//root->minAABB = glm::vec3(-43.8f, -43.5f, -33.f);
+	//root->maxAABB = glm::vec3(43.8f, 43.5f, 33.f);
+
+	//root->minAABB = glm::vec3(-33.147f, -35.4435f, -44.265f);
+	//root->maxAABB = glm::vec3(33.147f, 35.4435f, 44.265f);
+
+
 	root->id = 0;
 	int maxDepth = -1;
 	int spPerLeaf = 3;
@@ -223,7 +230,7 @@ SahDivision SahConstruction::performSAH(std::vector<SphereCPU*> sortedSpheres, K
 			volA[dimSplit] = t - node->minAABB[dimSplit];
 			volB[dimSplit] = node->maxAABB[dimSplit] - t;
 
-			//když koule má svùj støed mimo tento bounding box, ale protíná dìlící plochu
+			
 			if (volA[dimSplit] < 0.f) {
 				std::cout << "VolA < 0.f" << "\n";
 				continue;
@@ -258,7 +265,7 @@ SahDivision SahConstruction::performSAH(std::vector<SphereCPU*> sortedSpheres, K
 		std::cout << "initMinCost: " << TEST_COST * sortedSpheres.size() << "\n";
 		std::cout << "minCost: " << minCost << "\n";
 		SahDivision sd;
-		if (sortedSpheres.size() <=4 || initMinCost < minCost || areaMain <= 6.f) {
+		if (sortedSpheres.size() <=6 || initMinCost < minCost || areaMain <= 6.f) {
 			std::cout << "leaf best\n";
 			sd.A = sortedSpheres;
 			sd.B = sortedSpheres;
@@ -299,45 +306,7 @@ SahDivision SahConstruction::performSAH(std::vector<SphereCPU*> sortedSpheres, K
 		}
 		std::cout << "---------------------------\n";
 		return sd;
-	/*}
-	else {
-		float splitPoint = (sortedSpheres[sortedSpheres.size() / 2])->origin[dimSplit];
-
-		std::vector<SphereCPU*> A;
-		std::vector<SphereCPU*> B;
-		int countInA = 0;
-		for (int i = 0;i < sortedSpheres.size();i++) {
-			float pos = sortedSpheres[i]->origin[dimSplit];
-			float radius = sortedSpheres[i]->radius;
-			if (pos <= splitPoint ) {
-				A.push_back(sortedSpheres[i]);
-				
-			}
-			if (pos > splitPoint ) {
-				B.push_back(sortedSpheres[i]);
-				
-			}
-		}
-		SahDivision sd;
-		sd.A = A;
-		sd.B = B;
-		sd.dimension = dimSplit;
-		sd.cost = 2 * sortedSpheres.size();
-		sd.splitPoint = splitPoint;
-		return sd;
-	}*/
-	//for t cyklus: 
-		//
-		// 
-		// 
-		//for sphere? cyklus2:
-			//is sphere in A or B?
-			// 
-		//Compute volumus
-		//compute P_a && P_b
-		//compute cost
-		// is min? 
-		//t++
+	
 
 }
 
@@ -392,25 +361,3 @@ std::vector<SphereCPU*> SahConstruction::getExtendingSpheres(std::vector<SphereC
 
 }
 
-/*float SahConstruction::computeSurfaceArea(int dimension, glm::vec3 atributes) {
-	float width = atributes[0];
-	float height = atributes[1];
-	float length = atributes[2];
-	
-
-	switch (dimension) {
-		case 0:
-			return 2 * 
-		break;
-		case 1:
-
-		break;
-		case 2:
-
-		break;
-		default:
-			std::cout << "SAH:can't compute surface area: dimenation = -1\n";
-			return -1.f;
-		break;
-	}
-}*/

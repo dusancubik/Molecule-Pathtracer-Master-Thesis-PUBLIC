@@ -52,6 +52,8 @@ void KdTreeRopes::optimizeRopes(std::vector<KdTreeNodeRopes*> tree) {
 	}
 }
 
+
+
 void KdTreeRopes::optimizeNodeRopes(KdTreeNodeRopes* node) {
 	for (int j = 0;j < 6;j++) {
 		int rope = node->ropes[j];
@@ -97,7 +99,7 @@ void KdTreeRopes::addRopes(std::vector<KdTreeNodeRopes*> tree) {
 		KdTreeNodeRopes* node = tree[i];
 		if (!node->isLeaf) {
 
-			//optimizeNodeRopes(node);
+			optimizeNodeRopes(node);
 
 			int leftChild = node->leftChildId;
 			int rightChild = node->rightChildId;
@@ -125,6 +127,8 @@ void KdTreeRopes::addRopes(std::vector<KdTreeNodeRopes*> tree) {
 	
 }
 
+
+
 int KdTreeRopes::getSplitAxis(int face) {
 	switch (face) {
 		case 0: case 1: return 0;
@@ -140,7 +144,7 @@ void KdTreeRopes::createTreeSsbos(std::vector<KdTreeNodeRopes*> tree) {
 	//std::vector<KdTreeNodeUBO> tree
 
 	addRopes(tree);
-	
+	optimizeRopes(tree);
 	int leavesIndex = 1;
 
 	for (int i = 0;i < tree.size();i++) {
@@ -201,8 +205,8 @@ void KdTreeRopes::createTreeSsbos(std::vector<KdTreeNodeRopes*> tree) {
 
 					sphereCPU->id = sphereSSBOs.size();
 					if (j == 0) firstId = sphereCPU->id;
-					//Sphere sphere{ sphereCPU->origin,sphereCPU->radius,sphereCPU->color };
-					//sphereSSBOs.push_back(sphere);
+					Sphere sphere{ sphereCPU->origin,sphereCPU->radius,sphereCPU->color };
+					sphereSSBOs.push_back(sphere);
 					//leafUBO.spheresIdx[j] = sphereCPU->id;
 					/* }
 					else {

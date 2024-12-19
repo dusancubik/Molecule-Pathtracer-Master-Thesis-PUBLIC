@@ -2,26 +2,25 @@
 //#include "rendererBase.cpp"
 //#include "../BVH/bvh.cpp"
 bool BVHFragmentRenderer::initCamera() {
-	camera = std::make_shared<Camera>(1280, 720, glm::vec3(0.f, 0.f, 3.0f));
+	camera = std::make_shared<PROTO_Camera>(1280, 720, glm::vec3(0.f, 0.f, 30.0f));
 	return true;
 }
 
 
 
 void BVHFragmentRenderer::initBindGroup(WGPUBindGroup &bindGroup,WGPUBindGroupLayout bindGroupLayout) {
-	// Create a binding
-	// 
+	
 	std::vector<WGPUBindGroupEntry> binding(3);
 
 	createBindGroupEntry(binding[0],0, uniformBuffer,0, sizeof(CameraUBO) );
 	createBindGroupEntry(binding[1], 1, bvhStorageBuffer, 0, sizeof(BVHNodeSSBO) * bvh->getBVHSSBOs().size());
 	createBindGroupEntry(binding[2], 2, spheresStorageBuffer, 0, sizeof(Sphere) * bvh->getSpheres().size());
 	
-	// A bind group contains one or multiple bindings
+	
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = bindGroupLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 3;
 	bindGroupDesc.entries = binding.data();//&binding;
 	bindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
@@ -63,21 +62,21 @@ void BVHFragmentRenderer::render(WGPUTextureView &nextTexture) {
 	WGPURenderPassDepthStencilAttachment depthStencilAttachment;
 	depthStencilAttachment.view = depthTextureView;
 
-	// The initial value of the depth buffer, meaning "far"
+	
 	depthStencilAttachment.depthClearValue = 1.0f;
-	// Operation settings comparable to the color attachment
+	
 	depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
 	depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
-	// we could turn off writing to the depth buffer globally here
+	
 	depthStencilAttachment.depthReadOnly = false;
 
-	// Stencil setup, mandatory but unused
+	
 	depthStencilAttachment.stencilClearValue = 0;
 	depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
 	depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
 	depthStencilAttachment.stencilReadOnly = true;
 
-	//renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
+	
 	std::vector<WGPURenderPassTimestampWrite> timestampWritess = timestamp->getTimestamps();
 	renderPassDesc.timestampWriteCount = 0;//2;
 	renderPassDesc.timestampWrites = nullptr;//timestampWritess.data();
@@ -87,7 +86,7 @@ void BVHFragmentRenderer::render(WGPUTextureView &nextTexture) {
 
 	
 	wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
-	// Draw 1 instance of a 3-vertices shape
+	
 	wgpuRenderPassEncoderSetBindGroup(renderPass, 0, bindGroup, 0, nullptr);
 
 	//wgpuRenderPassEncoderWriteTimestamp(renderPass, timestamp->getQuerySet(), 0);
@@ -146,7 +145,7 @@ void BVHFragmentRenderer::init(std::vector<SphereCPU*> _spheres, WGPUDevice _dev
 	
 
 
-	shaderModule = ResourceManager::loadShaderModule("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\shaders\\fragment\\bvh\\raytracing_bvh_frag.wgsl", device);
+	shaderModule = ResourceManager::loadShaderModule("shaders_prototype\\fragment\\bvh\\raytracing_bvh_frag.wgsl", device);
 	std::cout << "Shader module: " << shaderModule << std::endl;
 
 	std::cout << "Creating BASIC render pipeline..." << std::endl;
@@ -160,7 +159,7 @@ void BVHFragmentRenderer::init(std::vector<SphereCPU*> _spheres, WGPUDevice _dev
 
 	
 
-	// Vertex shader
+	
 	pipelineDesc.vertex.module = shaderModule;
 	pipelineDesc.vertex.entryPoint = "vs_main";
 	pipelineDesc.vertex.constantCount = 0;
@@ -171,7 +170,7 @@ void BVHFragmentRenderer::init(std::vector<SphereCPU*> _spheres, WGPUDevice _dev
 	pipelineDesc.primitive.frontFace = WGPUFrontFace_CCW;
 	pipelineDesc.primitive.cullMode = WGPUCullMode_None;
 
-	// Fragment shader
+	
 	WGPUFragmentState fragmentState = {};
 	fragmentState.nextInChain = nullptr;
 	pipelineDesc.fragment = &fragmentState;
@@ -180,13 +179,13 @@ void BVHFragmentRenderer::init(std::vector<SphereCPU*> _spheres, WGPUDevice _dev
 	fragmentState.constantCount = 0;
 	fragmentState.constants = nullptr;
 
-	// Configure blend state
+	
 	WGPUBlendState blendState;
-	// Usual alpha blending for the color:
+	
 	blendState.color.srcFactor = WGPUBlendFactor_SrcAlpha;
 	blendState.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
 	blendState.color.operation = WGPUBlendOperation_Add;
-	// We leave the target alpha untouched:
+	
 	blendState.alpha.srcFactor = WGPUBlendFactor_Zero;
 	blendState.alpha.dstFactor = WGPUBlendFactor_One;
 	blendState.alpha.operation = WGPUBlendOperation_Add;
@@ -195,32 +194,28 @@ void BVHFragmentRenderer::init(std::vector<SphereCPU*> _spheres, WGPUDevice _dev
 	colorTarget.nextInChain = nullptr;
 	colorTarget.format = swap_chain_default_format;
 	colorTarget.blend = &blendState;
-	colorTarget.writeMask = WGPUColorWriteMask_All; // We could write to only some of the color channels.
-
-	// We have only one target because our render pass has only one output color
-	// attachment.
+	colorTarget.writeMask = WGPUColorWriteMask_All; 
 	fragmentState.targetCount = 1;
 	fragmentState.targets = &colorTarget;
 
 
 	//pipelineDesc.depthStencil = &depthStencilState;
 
-		// Multi-sampling
-	// Samples per pixel
+
 	pipelineDesc.multisample.count = 1;
-	// Default value for the mask, meaning "all bits on"
+	
 	pipelineDesc.multisample.mask = ~0u;
-	// Default value as well (irrelevant for count = 1 anyways)
+	
 	pipelineDesc.multisample.alphaToCoverageEnabled = false;
 
-	// Create binding layout (don't forget to = Default)
+	
 	std::vector<WGPUBindGroupLayoutEntry> bindingLayout(3);
 
 	
 	createBindingLayout(0, sizeof(CameraUBO), bindingLayout[0], WGPUBufferBindingType_Uniform, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 	createBindingLayout(1, sizeof(BVHNodeSSBO), bindingLayout[1], WGPUBufferBindingType_ReadOnlyStorage, WGPUShaderStage_Fragment);
 	createBindingLayout(2, sizeof(Sphere),bindingLayout[2], WGPUBufferBindingType_ReadOnlyStorage, WGPUShaderStage_Fragment);
-	// Create a bind group layout
+	
 	WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};
 	bindGroupLayoutDesc.entryCount = 3;
 	bindGroupLayoutDesc.entries = bindingLayout.data();//&bindingLayout;
@@ -228,7 +223,7 @@ void BVHFragmentRenderer::init(std::vector<SphereCPU*> _spheres, WGPUDevice _dev
 
 
 
-	// Pipeline layout
+	
 	WGPUPipelineLayoutDescriptor layoutDesc = {};
 	//layoutDesc.nextInChain = nullptr;
 	layoutDesc.bindGroupLayoutCount = 1;

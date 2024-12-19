@@ -1,7 +1,19 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: computeRendererBVHAccumulator.hpp
+ *
+ *  Description:
+ *  The ComputeRendererBVHAccumulator is derived from RendererBase and handles rendering pipeline for BVH with samples accumulation.
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 #include "rendererBase.hpp"
 #include "../KdTree/kdTreeRopes.hpp"
-#include "../BVH/bvh4.hpp"
+#include "../BVH/bvh.hpp"
 
 struct Config {
     int currentIteration = -1;
@@ -18,10 +30,10 @@ class ComputeRendererBVHAccumulator : public RendererBase {
 
 		void render(WGPUTextureView &nextTexture) override;
 
-        std::shared_ptr<Camera> getCamera() override { return camera; };
+        std::shared_ptr<PROTO_Camera> getCamera() override { return camera; };
 
         void setKdTree(std::shared_ptr<KdTreeRopes> _kdTree)  { kdTree = _kdTree; }
-        void setBVH(std::shared_ptr<BVH> _bvh) { bvh = _bvh; }
+        void setBVH(std::shared_ptr<PROTO_BVH> _bvh) { bvh = _bvh; }
 	private:
         Config config;
         WGPUBuffer configBuffer = nullptr;
@@ -90,7 +102,7 @@ class ComputeRendererBVHAccumulator : public RendererBase {
         //std::shared_ptr<Timestamp> timestamp;
 
         //Camera
-        std::shared_ptr<Camera> camera;
+        std::shared_ptr<PROTO_Camera> camera;
         bool initCamera();
 
         //static void readBufferMap(WGPUBufferMapAsyncStatus status, void* userdata);
@@ -98,7 +110,7 @@ class ComputeRendererBVHAccumulator : public RendererBase {
         //kdTree
         std::shared_ptr<KdTreeRopes> kdTree;
         //bvh
-        std::shared_ptr<BVH> bvh;
+        std::shared_ptr<PROTO_BVH> bvh;
         WGPUBuffer bvhStorageBuffer = nullptr;
         WGPUBuffer leavesStorageBuffer = nullptr;
 

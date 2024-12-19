@@ -1,28 +1,37 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: raytracing_bvh_frag.wgsl
+ *
+ *  Description: 
+ *  This shader is part of the prototype. 
+ *  It performs ray tracing(direct lighting) without any acceleration structure.
+ *  
+ * -----------------------------------------------------------------------------
+ */
 struct Sphere{
 	origin: vec3f,
 	radius: f32,
 	color: vec4f
 };
 
-/*struct Spheres{
-	sphere: array<Sphere>;	
-};*/
+
 @group(0) @binding(1) var<storage> spheres: array<Sphere>;
-// ----------------------------------------------------------------------------
-// Ray Tracing Structures
-// ----------------------------------------------------------------------------
-// The definition of a ray.
+
 struct Ray {
     origin:vec3f,     // The ray origin.
     direction:vec3f  // The ray direction.
 };
-// The definition of an intersection.
+
 struct Hit {
-    intersection:vec3f,      // The intersection point.
-	t:f32,				  // The distance between the ray origin and the intersection points along the ray. 
-    normal:vec3f,             // The surface normal at the interesection point.
-	material:vec4f,			  // The material of the object at the intersection point.
-	sphere:Sphere //the actual sphere TODO: think if necessecary or use pointer
+    intersection:vec3f,      
+	t:f32,				  
+    normal:vec3f,            
+	material:vec4f,			  
+	sphere:Sphere 
 };
 const miss = Hit(vec3f(0.0f), 1e20, vec3f(0.0f), vec4f(0.f),Sphere(vec3f(0.f),0.f,vec4f(0.f)));
 const PI = 3.14159265;
@@ -48,32 +57,13 @@ const tex_coords = array<vec2f,3>(
 	vec2f(0.0, 2.0)
 );
 
-/*struct VertexInput {
-	@location(0) position: vec3f,
-    //                        ^ This was a 2
-	@location(1) color: vec3f,
-};*/
 
 struct VertexOutput {
 	@builtin(position) position: vec4f,
 	@location(0) tex_coord: vec2f,
 };
 
-/**
- * A structure holding the value of our uniforms
- */
-/*struct MyUniforms {
-    projectionMatrix: mat4x4f,
-    viewMatrix: mat4x4f,
-    modelMatrix: mat4x4f,
-    color: vec4f,
-    time: f32,
-};*/
 
-// Instead of the simple uTime variable, our uniform variable is a struct
-//@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
-
-//const pi = 3.14159265359;
 @vertex
 fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
 	//return vs_main_optionA(in);
@@ -85,30 +75,7 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
 }
 
 
-/*fn CastShadowRay(ray : Ray, normal:vec3f, point:vec3f) -> Hit {
-    let nd = dot(normal, ray.direction);
-    
-    // Check if ray is nearly parallel to the plane
-    if (abs(nd) < 1e-6) {
-        return miss;
-    }
 
-    let sp = point - ray.origin;
-    let t = dot(sp, normal) / nd;
-
-    if (t < 0.0) { 
-        return miss; 
-    }
-
-    let intersection = ray.origin + t * ray.direction;
-
-    // circle
-    if(length(intersection) > 8){
-        return miss;
-    }
-
-    return Hit(intersection, t, normal, vec3f(0.5f));
-}*/
 
 fn RayPlaneIntersection(ray : Ray, normal:vec3f, point:vec3f) -> Hit {
     let nd = dot(normal, ray.direction);
@@ -164,7 +131,7 @@ fn RaySphereIntersection(ray : Ray, sphere : Sphere) -> Hit{
 }
 
 fn Evaluate(ray :Ray) -> Hit{
-	// Sets the closes hit either to miss
+	
 	var closest_hit = RayPlaneIntersection(ray, vec3f(0.0f, 1.f, 0.f), vec3f(0.0f,0.0f,0.0f));
 
 	
@@ -180,7 +147,7 @@ fn Evaluate(ray :Ray) -> Hit{
 
 fn schlickFresnel(vDotH : f32,color:vec3f) -> vec3f{
 	var F0 = vec3f(0.04);
-	//TODO: if is metal
+	
 
 	if(metallic){
 		F0 = color;
@@ -247,7 +214,6 @@ fn Trace(ray : Ray) -> vec3f{
     var light : Light;
 	light.position = vec3f(0.0f,20.5f,0.0f);
 	light.diffuse = vec3f(1.f);
-	// The accumulated color and attenuation used when tracing the rays throug the scene.
 
 
 
@@ -256,40 +222,30 @@ fn Trace(ray : Ray) -> vec3f{
 
 	
 
-	// Due to floating-point precision errors, when a ray intersects geometry at a surface, the point of intersection could possibly be just below the surface.
-	// The subsequent reflection and shadow rays would then bounce off the *inside* wall of the surface. This is known as self-intersection.
-	// We, therefore, use a small epsilon to offset the subsequent rays.
+	
 	let epsilon = 0.01f;
 
-	// ----------------- TODO: Write your implementation here! ----------------- //
-	// Add difuse lighting, shadows and skybox.
-	// Hints: The skybox texture is stored in 'skybox_tex'.
-	//        You can keep a bit of color in areas with shadows (e.g., 0.2*hit.material).
-	// ------------------------------------------------------------------------- //
+
 	let hit = Evaluate(ray);
 
-	// The direction towards the light.
+	
 	var L = normalize(light.position -  hit.intersection);
 
 	if (!isHitMiss(hit)) {
 		let N = hit.normal;
-		//return calculatePBR(ray,hit.intersection,N,hit.material);//ambient + 0.8*hit.material*NdotL *light.diffuse; 
+		
 		let NdotL = max(dot(N, L), 0.0);
 
 		let ambient = 0.1*hit.material.xyz;
-		//let shadowOrigin = hit.sphere.origin + (hit.sphere.radius+epsilon) * N ;//hit.intersection +  epsilon * N;
+		
 		let shadowOrigin = hit.intersection +  epsilon * N;
 
 		let shadowRay = Ray(shadowOrigin, L);
 		let shadowHit = Evaluate(shadowRay);
-		//color =  ambient + 0.8*hit.material*NdotL * light.diffuse; 
+		
 		if(!isHitMiss(shadowHit) && dot(shadowRay.direction,N)>0.0f){
 			color = ambient;//+vec3f(0.f,0.f,1.f);
-			/*if(dot(shadowRay.direction,N)<0.0f){
-				color = 1.5*ambient;
-			}else{
-				color =  ambient + 0.8*hit.material*NdotL *light.diffuse; 
-			}*/
+
 		}else{
 			color = ambient+calculatePBR(ray,hit.intersection,N,hit.material.xyz);//ambient + 0.8*hit.material*NdotL *light.diffuse; 
 		}
@@ -319,10 +275,10 @@ fn isHitMiss(hit:Hit) -> bool{
 }
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-	//ProjectionView
+	
 	let aspect_ratio = 1280.0/720.0;
-	let uv = (2.0*in.tex_coord-1.0)* vec2f(aspect_ratio, 1.0);// * vec2f(aspect_ratio, 1.0);
-	let P = (uCamera.inversePV * vec4f(uv, -1.0, 1.0)).xyz;//vec3f(0.0f,0.0f,2.0f);//(uCamera.inversePV * vec4f(uv, -1.0, 1.0)).xyz;
+	let uv = (2.0*in.tex_coord-1.0)* vec2f(aspect_ratio, 1.0);
+	let P = (uCamera.inversePV * vec4f(uv, -1.0, 1.0)).xyz;
 	let direction = normalize(P - uCamera.position.xyz);
 	
 	let ray = Ray(P, direction);

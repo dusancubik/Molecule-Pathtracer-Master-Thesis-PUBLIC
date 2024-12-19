@@ -1,16 +1,16 @@
 #include "bvh.hpp"
 
-#define NODE_COST 10.
+#define NODE_COST 2.
 #define TEST_COST 4.
 #define SPHERE_THR 3
-void BVH::construct(std::vector<SphereCPU*> spheres) {
+void PROTO_BVH::construct(std::vector<SphereCPU*> spheres) {
 	constructBVH(spheres);
     tranformToSSBO();
 }
 
-void BVH::tranformToSSBO() {
+void PROTO_BVH::tranformToSSBO() {
     for (int i = 0; i < BVHConstruct.size(); i++){
-        BVHConstructNode* node = BVHConstruct[i];
+        PROTO_BVHConstructNode* node = BVHConstruct[i];
         BVHNodeSSBO nodeSSBO;
         nodeSSBO.minAABB = node->minAABB;
         nodeSSBO.maxAABB = node->maxAABB;
@@ -41,19 +41,19 @@ void BVH::tranformToSSBO() {
     std::cout << "BVH transformed to SSBOs\n";
 }
 
-void BVH::constructBVH(std::vector<SphereCPU*> spheres) {
-    BVHConstructNode* root = new BVHConstructNode;
+void PROTO_BVH::constructBVH(std::vector<SphereCPU*> spheres) {
+    PROTO_BVHConstructNode* root = new PROTO_BVHConstructNode;
     root->spheres = spheres;
     root->id = BVHConstruct.size();
-    std::stack<BVHConstructNode*> unprocessed;
+    std::stack<PROTO_BVHConstructNode*> unprocessed;
     root->depth = 0;
     unprocessed.push(root);
     BVHConstruct.push_back(root);
     while (!unprocessed.empty()) {
-        BVHConstructNode* node = unprocessed.top();
+        PROTO_BVHConstructNode* node = unprocessed.top();
         unprocessed.pop();
         updateAABB(node, node->spheres);
-        BVHDivision bvhDiv;
+        PROTO_BVHDivision bvhDiv;
         /*if (node->spheres.size()>4)
             bvhDiv = subdivide(node);
         else {
@@ -72,10 +72,10 @@ void BVH::constructBVH(std::vector<SphereCPU*> spheres) {
         }
 
 
-        BVHConstructNode* leftChild = new BVHConstructNode;
+        PROTO_BVHConstructNode* leftChild = new PROTO_BVHConstructNode;
         leftChild->spheres = bvhDiv.leftSpheres;
         
-        BVHConstructNode* rightChild = new BVHConstructNode;
+        PROTO_BVHConstructNode* rightChild = new PROTO_BVHConstructNode;
         rightChild->spheres = bvhDiv.rightSpheres;
 
         //node->id = BVHConstruct.size();
@@ -88,7 +88,7 @@ void BVH::constructBVH(std::vector<SphereCPU*> spheres) {
         BVHConstruct.push_back(leftChild);
 
         rightChild->id = BVHConstruct.size();
-        BVHConstruct.push_back(rightChild);
+        BVHConstruct.push_back(rightChild);  
         unprocessed.push(leftChild);
         unprocessed.push(rightChild);
 
@@ -99,7 +99,7 @@ void BVH::constructBVH(std::vector<SphereCPU*> spheres) {
     std::cout << "BVH CPU constructed\n";
 }
 
-void BVH::updateAABB(BVHConstructNode* node, std::vector<SphereCPU*> spheres) {
+void PROTO_BVH::updateAABB(PROTO_BVHConstructNode* node, std::vector<SphereCPU*> spheres) {
 
     node->minAABB = glm::vec3(9999.f);
     node->maxAABB = glm::vec3(-9999.f);
@@ -108,18 +108,11 @@ void BVH::updateAABB(BVHConstructNode* node, std::vector<SphereCPU*> spheres) {
         SphereCPU* sphere = spheres[i];
         float radius = 1.f;//sphere->radius;
         updateBounds(node->minAABB, node->maxAABB, sphere->origin - radius, sphere->origin + radius);
-        /*node->minAABB.x = glm::min(node->minAABB.x, sphere->origin.x - radius);
-        node->minAABB.y = glm::min(node->minAABB.y, sphere->origin.y - radius);
-        node->minAABB.z = glm::min(node->minAABB.z, sphere->origin.z - radius);
-
-        
-        node->maxAABB.x = glm::max(node->maxAABB.x, sphere->origin.x + radius);
-        node->maxAABB.y = glm::max(node->maxAABB.y, sphere->origin.y + radius);
-        node->maxAABB.z = glm::max(node->maxAABB.z, sphere->origin.z + radius);*/
+ 
     }
 }
 
-BVHDivision BVH::subdivide(BVHConstructNode* node) {
+PROTO_BVHDivision PROTO_BVH::subdivide(PROTO_BVHConstructNode* node) {
     glm::vec3 extent = node->maxAABB - node->minAABB;
     int axis = 0;
     if (extent.y > extent.x) axis = 1;
@@ -143,15 +136,15 @@ BVHDivision BVH::subdivide(BVHConstructNode* node) {
     }
     node->dimSplit = axis;
 
-    BVHDivision bvhDiv;
+    PROTO_BVHDivision bvhDiv;
     bvhDiv.leftSpheres = leftChildSpheres;
     bvhDiv.rightSpheres = rightChildSpheres;
 
     return bvhDiv;
 }
 
-BVHDivision BVH::subdivideSAH(BVHConstructNode* node) {
-    BVHDivision bvhDiv;
+PROTO_BVHDivision PROTO_BVH::subdivideSAH(PROTO_BVHConstructNode* node) {
+    PROTO_BVHDivision bvhDiv;
     if (node->spheres.size() <= 2) {
         //return subdivide(node);
         bvhDiv.leaf = true;
@@ -245,7 +238,7 @@ BVHDivision BVH::subdivideSAH(BVHConstructNode* node) {
     return bvhDiv;
 }
 
-void BVH::updateBounds(glm::vec3 &minAABB, glm::vec3 &maxAABB, glm::vec3 minCentroid, glm::vec3 maxCentroid){
+void PROTO_BVH::updateBounds(glm::vec3 &minAABB, glm::vec3 &maxAABB, glm::vec3 minCentroid, glm::vec3 maxCentroid){
     minAABB.x = glm::min(minAABB.x, minCentroid.x);
     minAABB.y = glm::min(minAABB.y, minCentroid.y);
     minAABB.z = glm::min(minAABB.z, minCentroid.z);
@@ -256,7 +249,7 @@ void BVH::updateBounds(glm::vec3 &minAABB, glm::vec3 &maxAABB, glm::vec3 minCent
     maxAABB.z = glm::max(maxAABB.z, maxCentroid.z);
 }
 
-glm::vec3 BVH::offset(glm::vec3 minAABB, glm::vec3 maxAABB, glm::vec3 centroid) {
+glm::vec3 PROTO_BVH::offset(glm::vec3 minAABB, glm::vec3 maxAABB, glm::vec3 centroid) {
     glm::vec3 o = centroid - minAABB;
     if (maxAABB.x > minAABB.x) o.x /= maxAABB.x - minAABB.x;
     if (maxAABB.y > minAABB.y) o.y /= maxAABB.y - minAABB.y;
@@ -264,7 +257,7 @@ glm::vec3 BVH::offset(glm::vec3 minAABB, glm::vec3 maxAABB, glm::vec3 centroid) 
     return o;
 }
 
-float BVH::getSurfaceArea(glm::vec3 minAABB, glm::vec3 maxAABB) {
+float PROTO_BVH::getSurfaceArea(glm::vec3 minAABB, glm::vec3 maxAABB) {
     glm::vec3 d = maxAABB - minAABB;
     return 2 * (d.x * d.y + d.x * d.z + d.y * d.z);
 }

@@ -2,7 +2,7 @@
 
 
 
-Camera::Camera(int width, int height, glm::vec3 _position)
+PROTO_Camera::PROTO_Camera(int width, int height, glm::vec3 _position)
 {
 	is_zooming = false;
 	width = width;
@@ -15,7 +15,7 @@ Camera::Camera(int width, int height, glm::vec3 _position)
 	initCameraUBO(FOVdeg, nearPlane, farPlane);
 }
 
-void Camera::initCameraUBO(float FOVdeg, float nearPlane, float farPlane)
+void PROTO_Camera::initCameraUBO(float FOVdeg, float nearPlane, float farPlane)
 {
 
 	glm::mat4 view = glm::mat4(1.0f);
@@ -31,7 +31,7 @@ void Camera::initCameraUBO(float FOVdeg, float nearPlane, float farPlane)
 	cameraUBO.projection = projection;
 	cameraUBO.inversePV = inverse(/*projection */ view);
 }
-void Camera::updateCamera()
+void PROTO_Camera::updateCamera()
 {
 	glm::mat4 projection = glm::mat4(1.0f);
 	view = glm::lookAt(position, glm::vec3(0.0f, 0.0f, 0.0f), up);
@@ -41,10 +41,12 @@ void Camera::updateCamera()
 	cameraUBO.view = view;
 	cameraUBO.projection = projection;
 	cameraUBO.inversePV = inverse(/*projection */ view);
+	std::cout << "cameraPos: (" << position.x<<"," << position.y << ","<< position.z<<")\n";
+	std::cout << "cameraOr: (" << orientation.x<<"," << orientation.y << ","<< orientation.z<<")\n";
 }
 
 
-void Camera::onMouseMove(double x, double y) {
+void PROTO_Camera::onMouseMove(double x, double y) {
 	did_move = true;
 	
 
@@ -73,7 +75,9 @@ void Camera::onMouseMove(double x, double y) {
 		yaw += xoffset;
 		pitch += yoffset;
 	}
-	
+
+	//yaw = 120.f;
+	//pitch = 40.f;
 	position.x = distance * sin(glm::radians(pitch)) * cos(glm::radians(yaw));
 	position.y = distance * cos(glm::radians(pitch));
 	position.z = distance * sin(glm::radians(pitch)) * sin(glm::radians(yaw));
@@ -81,7 +85,7 @@ void Camera::onMouseMove(double x, double y) {
 	
 }
 
-void Camera::onMouseButton(int button, int action, int mods) {
+void PROTO_Camera::onMouseButton(int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
 		if (action == GLFW_PRESS) {
 			std::cout << "is zooming\n";
@@ -93,7 +97,7 @@ void Camera::onMouseButton(int button, int action, int mods) {
 	}
 }
 
-void Camera::onKeyPressed(int key, int scancode, int action, int mods) {
+void PROTO_Camera::onKeyPressed(int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 		std::cout << "W pressed\n";
 		position += orientation * 0.05f;

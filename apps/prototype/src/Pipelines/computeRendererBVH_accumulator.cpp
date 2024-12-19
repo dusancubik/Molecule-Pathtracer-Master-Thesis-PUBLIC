@@ -2,14 +2,14 @@
 #include "../KdTree/kdTreeRopes.hpp"
 
 bool ComputeRendererBVHAccumulator::initCamera() {
-	camera = std::make_shared<Camera>(1280, 720, glm::vec3(0.f, 0.f, 3.0f));
+	camera = std::make_shared<PROTO_Camera>(1280, 720, glm::vec3(0.f, 0.f, 3.0f));
 	return true;
 }
 
 
 
 void ComputeRendererBVHAccumulator::initRaytraycingDataTexturesBindGroups() {
-	// Create a binding
+	
 	// 
 	std::vector<WGPUBindGroupLayoutEntry> raytracingDataBindingLayout1(6);
 	createBindingLayout(0, 0, raytracingDataBindingLayout1[0], WGPUBufferBindingType_Undefined, WGPUShaderStage_Compute);
@@ -55,9 +55,9 @@ void ComputeRendererBVHAccumulator::initRaytraycingDataTexturesBindGroups() {
 	raytracingBindGroupLayoutDesc.entryCount = 6;
 	raytracingBindGroupLayoutDesc.entries = raytracingDataBindingLayout1.data();//&bindingLayout;
 	rayTracingDataTexturesBindLayout = wgpuDeviceCreateBindGroupLayout(device, &raytracingBindGroupLayoutDesc);
-	//WGPUBindGroupLayout raytracingDataBindGroupLayout2 = wgpuDeviceCreateBindGroupLayout(device, &raytracingBindGroupLayoutDesc);
+	
 
-	//1
+	
 	std::vector<WGPUBindGroupEntry> binding(6);
 	binding[0].nextInChain = nullptr;
 	binding[0].binding = 0;
@@ -86,9 +86,9 @@ void ComputeRendererBVHAccumulator::initRaytraycingDataTexturesBindGroups() {
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = rayTracingDataTexturesBindLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 6;
-	bindGroupDesc.entries = binding.data();//&binding;
+	bindGroupDesc.entries = binding.data();
 	rayTracingDataTexturesBindGroup1 = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
 
 	//2
@@ -121,7 +121,7 @@ void ComputeRendererBVHAccumulator::initRaytraycingDataTexturesBindGroups() {
 	WGPUBindGroupDescriptor bindGroupDesc2 = {};
 	bindGroupDesc2.nextInChain = nullptr;
 	bindGroupDesc2.layout = rayTracingDataTexturesBindLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc2.entryCount = 6;
 	bindGroupDesc2.entries = binding2.data();//&binding;
 	rayTracingDataTexturesBindGroup2 = wgpuDeviceCreateBindGroup(device, &bindGroupDesc2);
@@ -152,15 +152,14 @@ void ComputeRendererBVHAccumulator::initRaytracingBindGroup(WGPUBindGroup& bindG
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = bindGroupLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 6;
 	bindGroupDesc.entries = binding.data();//&binding;
 	bindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
 }
 
 void ComputeRendererBVHAccumulator::initScreenAccumulationBindGroups() {
-	// Create a binding
-	// 
+	
 	std::vector<WGPUBindGroupLayoutEntry> screenDataBindingLayout(2);
 
 	createBindingLayout(0, 0, screenDataBindingLayout[0], WGPUBufferBindingType_Undefined, WGPUShaderStage_Fragment);
@@ -180,9 +179,7 @@ void ComputeRendererBVHAccumulator::initScreenAccumulationBindGroups() {
 	accumulationBindGroupLayoutDesc.entryCount = 2;
 	accumulationBindGroupLayoutDesc.entries = screenDataBindingLayout.data();//&bindingLayout;
 	screenAccumulationBindLayout = wgpuDeviceCreateBindGroupLayout(device, &accumulationBindGroupLayoutDesc);
-	//WGPUBindGroupLayout raytracingDataBindGroupLayout2 = wgpuDeviceCreateBindGroupLayout(device, &raytracingBindGroupLayoutDesc);
 
-	//1
 	std::vector<WGPUBindGroupEntry> binding(2);
 	binding[0].nextInChain = nullptr;
 	binding[0].binding = 0;
@@ -195,12 +192,12 @@ void ComputeRendererBVHAccumulator::initScreenAccumulationBindGroups() {
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = screenAccumulationBindLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 2;
 	bindGroupDesc.entries = binding.data();//&binding;
 	screenAccumulationBindGroup1 = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
 
-	//2
+	
 	std::vector<WGPUBindGroupEntry> binding2(2);
 	binding2[0].nextInChain = nullptr;
 	binding2[0].binding = 0;
@@ -213,15 +210,14 @@ void ComputeRendererBVHAccumulator::initScreenAccumulationBindGroups() {
 	WGPUBindGroupDescriptor bindGroupDesc2 = {};
 	bindGroupDesc2.nextInChain = nullptr;
 	bindGroupDesc2.layout = screenAccumulationBindLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc2.entryCount = 2;
 	bindGroupDesc2.entries = binding2.data();//&binding;
 	screenAccumulationBindGroup2 = wgpuDeviceCreateBindGroup(device, &bindGroupDesc2);
 }
 
 void ComputeRendererBVHAccumulator::initScreenDataTexturesBindGroups() {
-	// Create a binding
-	// 
+	
 	std::vector<WGPUBindGroupLayoutEntry> screenDataBindingLayout(1);
 
 	WGPUTextureBindingLayout textureBindingLayout{};
@@ -248,7 +244,7 @@ void ComputeRendererBVHAccumulator::initScreenDataTexturesBindGroups() {
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = screenDataTextureBindLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 1;
 	bindGroupDesc.entries = binding.data();//&binding;
 	screenDataTextureBindGroup1 = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
@@ -262,7 +258,7 @@ void ComputeRendererBVHAccumulator::initScreenDataTexturesBindGroups() {
 	WGPUBindGroupDescriptor bindGroupDesc2 = {};
 	bindGroupDesc2.nextInChain = nullptr;
 	bindGroupDesc2.layout = screenDataTextureBindLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc2.entryCount = 1;
 	bindGroupDesc2.entries = binding2.data();//&binding;
 	screenDataTextureBindGroup2 = wgpuDeviceCreateBindGroup(device, &bindGroupDesc2);
@@ -279,11 +275,11 @@ void ComputeRendererBVHAccumulator::initScreenBindGroup(WGPUBindGroup& bindGroup
 
 	binding[0].sampler = sampler;
 	createBindGroupEntry(binding[1], 1, configBuffer, 0, sizeof(Config));
-	// A bind group contains one or multiple bindings
+	
 	WGPUBindGroupDescriptor bindGroupDesc = {};
 	bindGroupDesc.nextInChain = nullptr;
 	bindGroupDesc.layout = bindGroupLayout;
-	// There must be as many bindings as declared in the layout!
+	
 	bindGroupDesc.entryCount = 2;
 	bindGroupDesc.entries = binding.data();//&binding;
 	bindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
@@ -340,7 +336,7 @@ void ComputeRendererBVHAccumulator::render(WGPUTextureView &nextTexture) {
 	wgpuComputePassEncoderSetBindGroup(raytracingPass, 0, raytracingBindGroup, 0, nullptr);
 	//ping ponging texture
 	wgpuComputePassEncoderSetBindGroup(raytracingPass, 1,(iteration%2)==0? rayTracingDataTexturesBindGroup1: rayTracingDataTexturesBindGroup2, 0, nullptr);
-	wgpuComputePassEncoderDispatchWorkgroups(raytracingPass, 1024/8, 1024/4, 1);
+	wgpuComputePassEncoderDispatchWorkgroups(raytracingPass, 1280/8, 720/4, 1);
 
 	wgpuComputePassEncoderEnd(raytracingPass);
 
@@ -378,87 +374,7 @@ void ComputeRendererBVHAccumulator::render(WGPUTextureView &nextTexture) {
 	wgpuQueueSubmit(queue, 1, &commandBuffer);
 
 	
-	/*WGPURenderPassDescriptor renderPassDesc = {};
-	renderPassDesc.nextInChain = nullptr;
-
-	WGPURenderPassColorAttachment renderPassColorAttachment = {};
-	renderPassColorAttachment.view = nextTexture;
-	renderPassColorAttachment.resolveTarget = nullptr;
-	renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
-	renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-	renderPassColorAttachment.clearValue = WGPUColor{ 0.05, 0.05, 0.05, 1.0 };
-	renderPassDesc.colorAttachmentCount = 1;
-	renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-	WGPURenderPassDepthStencilAttachment depthStencilAttachment;
-	depthStencilAttachment.view = depthTextureView;
-
-	// The initial value of the depth buffer, meaning "far"
-	depthStencilAttachment.depthClearValue = 1.0f;
-	// Operation settings comparable to the color attachment
-	depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
-	depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
-	// we could turn off writing to the depth buffer globally here
-	depthStencilAttachment.depthReadOnly = false;
-
-	// Stencil setup, mandatory but unused
-	depthStencilAttachment.stencilClearValue = 0;
-	depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
-	depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
-	depthStencilAttachment.stencilReadOnly = true;
-
-	//renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
-	std::vector<WGPURenderPassTimestampWrite> timestampWritess = timestamp->getTimestamps();
-	renderPassDesc.timestampWriteCount = 0;//2;
-	renderPassDesc.timestampWrites = nullptr;//timestampWritess.data();
-	wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 0);
-	WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
-	//wgpuRenderPassEncoderWriteTimestamp(renderPass, timestamp->getQuerySet(), 0);
-
 	
-	wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
-	// Draw 1 instance of a 3-vertices shape
-	wgpuRenderPassEncoderSetBindGroup(renderPass, 0, bindGroup, 0, nullptr);
-
-	//wgpuRenderPassEncoderWriteTimestamp(renderPass, timestamp->getQuerySet(), 0);
-
-	//wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 0);
-	wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
-	
-	wgpuRenderPassEncoderEnd(renderPass);
-	//wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 1);
-
-	wgpuCommandEncoderWriteTimestamp(encoder, timestamp->getQuerySet(), 1);
-
-	wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
-
-
-
-
-	//wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
-	WGPUCommandBufferDescriptor cmdBufferDesc = {};
-	cmdBufferDesc.nextInChain = nullptr;
-	cmdBufferDesc.label = "Command buffer";
-	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, &cmdBufferDesc);
-	wgpuQueueSubmit(queue, 1, &commandBuffer);
-
-	//wgpuCommandEncoderResolveQuerySet(encoder, timestamp->getQuerySet(), 0, 2, timestamp->getQueryBuffer(), 0);
-	//copy timestamps
-	commandEncoderDesc.nextInChain = nullptr;
-	commandEncoderDesc.label = "Copy Command Encoder";
-	WGPUCommandEncoder copyEncoder = wgpuDeviceCreateCommandEncoder(device, &commandEncoderDesc);
-	if (wgpuBufferGetMapState(timestamp->getStagingBuffer()) == WGPUBufferMapState_Unmapped) {
-		wgpuCommandEncoderCopyBufferToBuffer(copyEncoder, timestamp->getQueryBuffer(), 0, timestamp->getStagingBuffer(), 0, 2 * sizeof(int64_t));
-
-		WGPUCommandBufferDescriptor copyCmdBufferDesc = {};
-		copyCmdBufferDesc.nextInChain = nullptr;
-		copyCmdBufferDesc.label = "Copy Command buffer";
-		WGPUCommandBuffer copyCommandBuffer = wgpuCommandEncoderFinish(copyEncoder, &copyCmdBufferDesc);
-		wgpuQueueSubmit(queue, 1, &copyCommandBuffer);
-
-		//auto callback = std::bind(&MainApplication::readBufferMap,this);
-		wgpuBufferMapAsync(timestamp->getStagingBuffer(), WGPUMapMode_Read, 0, sizeof(int64_t) * 2, &readBufferMap, this);
-	}*/
 }
 
 void ComputeRendererBVHAccumulator::init(std::vector<SphereCPU*> _spheres, WGPUDevice _device, WGPUQueue _queue, WGPUTextureFormat _swap_chain_default_format) {
@@ -562,20 +478,12 @@ void ComputeRendererBVHAccumulator::init(std::vector<SphereCPU*> _spheres, WGPUD
 	accumulation_buffer_view = wgpuTextureCreateView(accumulation_buffer, &textureViewDesc);
 	accumulation_buffer_view2 = wgpuTextureCreateView(accumulation_buffer2, &textureViewDesc);
 
-	/*WGPUSamplerDescriptor samplerDescriptor{};
-	samplerDescriptor.addressModeU = WGPUAddressMode_Repeat;
-	samplerDescriptor.addressModeV = WGPUAddressMode_Repeat;
-	samplerDescriptor.magFilter = WGPUFilterMode_Linear;
-	samplerDescriptor.minFilter = WGPUFilterMode_Nearest;
-	samplerDescriptor.mipmapFilter = WGPUFilterMode_Nearest;
-	samplerDescriptor.maxAnisotropy = 1;
-
-	sampler = wgpuDeviceCreateSampler(device, &samplerDescriptor);*/
-
-
-	screenShaderModule = ResourceManager::loadShaderModule("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\shaders\\compute\\BVH\\screen_shader_accumulated.wgsl", device);
 	
-	raytracingKernelModule = ResourceManager::loadShaderModule("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\shaders\\compute\\BVH\\raytracing_kernel_bvh_accumulated.wgsl", device);
+
+
+	screenShaderModule = ResourceManager::loadShaderModule("shaders_prototype\\compute\\BVH\\screen_shader_accumulated.wgsl", device);
+	
+	raytracingKernelModule = ResourceManager::loadShaderModule("shaders_prototype\\compute\\BVH\\raytracing_bvh_accumulated.wgsl", device);
 
 	initRaytraycingDataTexturesBindGroups();
 
@@ -616,7 +524,7 @@ void ComputeRendererBVHAccumulator::init(std::vector<SphereCPU*> _spheres, WGPUD
 	raytracingPipelineDesc.compute.module = raytracingKernelModule;
 	raytracingPipelineDesc.compute.entryPoint = "main";
 
-	// Pipeline layout
+	
 	std::vector<WGPUBindGroupLayout> raytracingBindGroupLayouts(2);
 	raytracingBindGroupLayouts[0] = raytracingBindGroupLayout;
 	raytracingBindGroupLayouts[1] = rayTracingDataTexturesBindLayout;
@@ -657,14 +565,14 @@ void ComputeRendererBVHAccumulator::init(std::vector<SphereCPU*> _spheres, WGPUD
 	screenPipelineDesc.nextInChain = nullptr;
 
 	screenPipelineDesc.vertex.module = screenShaderModule;
-	screenPipelineDesc.vertex.entryPoint = "vert_main";
+	screenPipelineDesc.vertex.entryPoint = "vs_main";
 
 	//fragment
 	WGPUFragmentState fragmentState = {};
 	fragmentState.nextInChain = nullptr;
 	screenPipelineDesc.fragment = &fragmentState;
 	fragmentState.module = screenShaderModule;
-	fragmentState.entryPoint = "frag_main";
+	fragmentState.entryPoint = "fs_main";
 	fragmentState.constantCount = 0;
 	fragmentState.constants = nullptr;
 
@@ -673,11 +581,11 @@ void ComputeRendererBVHAccumulator::init(std::vector<SphereCPU*> _spheres, WGPUD
 	screenPipelineDesc.multisample.count = 1;
 
 	WGPUBlendState blendState;
-	// Usual alpha blending for the color:
+	
 	blendState.color.srcFactor = WGPUBlendFactor_SrcAlpha;
 	blendState.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
 	blendState.color.operation = WGPUBlendOperation_Add;
-	// We leave the target alpha untouched:
+	
 	blendState.alpha.srcFactor = WGPUBlendFactor_Zero;
 	blendState.alpha.dstFactor = WGPUBlendFactor_One;
 	blendState.alpha.operation = WGPUBlendOperation_Add;
@@ -703,7 +611,7 @@ void ComputeRendererBVHAccumulator::init(std::vector<SphereCPU*> _spheres, WGPUD
 	screenBindGroupLayouts[0] = screenBindGroupLayout;
 	screenBindGroupLayouts[1] = screenDataTextureBindLayout;
 	screenBindGroupLayouts[2] = screenAccumulationBindLayout;
-	// Pipeline layout
+	
 	WGPUPipelineLayoutDescriptor screenLayoutDesc = {};
 	//layoutDesc.nextInChain = nullptr;
 	screenLayoutDesc.bindGroupLayoutCount = 3;
@@ -720,48 +628,9 @@ void ComputeRendererBVHAccumulator::init(std::vector<SphereCPU*> _spheres, WGPUD
 }
 
 void ComputeRendererBVHAccumulator::prepareCubemap() {
-	/*WGPUTextureDescriptor textureDesc{};
-	textureDesc.nextInChain = nullptr;
-	//textureDesc.dimension = WGPUTextureDimension_2D;
-	textureDesc.dimension = WGPUTextureDimension_2D;
-	textureDesc.size = { 1280, 720, 6 };
-	textureDesc.format = WGPUTextureFormat_RGBA8Unorm;
-	textureDesc.usage = WGPUTextureUsage_CopyDst | WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
-	textureDesc.sampleCount = 1;
-	textureDesc.mipLevelCount = 1;
 	
-
-
-	cubemapTexture = wgpuDeviceCreateTexture(device, &textureDesc);
-	//create
-	//wgpuQueueCopyExternalTextureForBrowser(queue,???,cubemapTexture);
-
-
-	WGPUTextureViewDescriptor textureViewDesc{};
-	textureViewDesc.dimension = WGPUTextureViewDimension_Cube;
-	textureViewDesc.mipLevelCount = 1;
-	textureViewDesc.arrayLayerCount = 6;
-	cubemapTexture_view = wgpuTextureCreateView(cubemapTexture, &textureViewDesc);
-
-	WGPUSamplerDescriptor samplerDescriptor{};
-	samplerDescriptor.addressModeU = WGPUAddressMode_Repeat;
-	samplerDescriptor.addressModeV = WGPUAddressMode_Repeat;
-	samplerDescriptor.magFilter = WGPUFilterMode_Linear;
-	samplerDescriptor.minFilter = WGPUFilterMode_Nearest;
-	samplerDescriptor.mipmapFilter = WGPUFilterMode_Nearest;
-	samplerDescriptor.maxAnisotropy = 1;
-	cubemap_sampler = wgpuDeviceCreateSampler(device,&samplerDescriptor);
-
-	unsigned char* pixelData;
-	ResourceManager::loadPixelData("", pixelData);
-	
-	wgpuQueueWriteTexture();
-	//imagecopytexture?
-	WGPUImageCopyTexture imageCopyTexture;
-	imageCopyTexture.texture
-	wgpuQueueWriteTexture(queue,???,pixe)*/
 	WGPUTextureView *tv = nullptr;
-	Cubemap cubemap = ResourceManager::loadCubemapTexture("E:\\MUNI\\Diplomka\\dusancubik-master-thesis\\apps\\analyst\\skybox\\", device, tv);
+	Cubemap cubemap = ResourceManager::loadCubemapTexture("resources\\Cubemaps\\Sky", device, tv);
 	cubemapTexture = cubemap.texture;
 	cubemapTextureView = cubemap.textureView;
 

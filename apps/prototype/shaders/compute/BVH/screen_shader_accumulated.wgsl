@@ -1,3 +1,16 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: screen_shader.wgsl
+ *
+ *  Description: 
+ *  This shader accumulates the image (sample) from path tracing pass with previous samples and draws it on a quad.
+ *  The Bilateral filter code is taken from https://github.com/tranvansang/bilateral-filter/blob/master/fshader.frag and is under MIT license.
+ * -----------------------------------------------------------------------------
+ */
 @group(0) @binding(0) var screen_sampler : sampler;
 @group(0) @binding(1) var<uniform> config: Config;
 @group(1) @binding(0) var color_buffer: texture_2d<f32>; //current sample
@@ -13,55 +26,48 @@ struct Config{
 }
 
 struct VertexOutput{
-    @builtin(position) Position: vec4<f32>,
-    @location(0) TexCoord: vec2<f32>
+    @builtin(position) pos: vec4<f32>,
+    @location(0) uv: vec2<f32>
 }
 
+const positions = array<vec2<f32>,6>(
+    vec2<f32>(1.0,1.0),
+    vec2<f32>(1.0,-1.0),
+    vec2<f32>(-1.0,-1.0),
+    vec2<f32>(1.0,1.0),
+    vec2<f32>(-1.0,-1.0),
+    vec2<f32>(-1.0,1.0),
+);
+
+const UVs = array<vec2<f32>,6>(
+    vec2<f32>(1.0,0.0),
+    vec2<f32>(1.0,1.0),
+    vec2<f32>(0.0,1.0),
+    vec2<f32>(1.0,0.0),
+    vec2<f32>(0.0,1.0),
+    vec2<f32>(0.0,0.0),
+);
 @vertex
-fn vert_main(@builtin(vertex_index) VertexIndex: u32) -> VertexOutput{
-    let positions = array<vec2<f32>,6>(
-        vec2<f32>(1.0,1.0),
-        vec2<f32>(1.0,-1.0),
-        vec2<f32>(-1.0,-1.0),
-        vec2<f32>(1.0,1.0),
-        vec2<f32>(-1.0,-1.0),
-        vec2<f32>(-1.0,1.0),
-    );
+fn vs_main(@builtin(vertex_index) VertexIndex: u32) -> VertexOutput{
 
-    let texCoords = array<vec2<f32>,6>(
-        vec2<f32>(1.0,0.0),
-        vec2<f32>(1.0,1.0),
-        vec2<f32>(0.0,1.0),
-        vec2<f32>(1.0,0.0),
-        vec2<f32>(0.0,1.0),
-        vec2<f32>(0.0,0.0),
-    );
-
-    var output: VertexOutput;
-    output.Position = vec4<f32>(positions[VertexIndex],0.0,1.0);
-    output.TexCoord = vec2<f32>(texCoords[VertexIndex]);
+     var output: VertexOutput;
+    output.pos = vec4<f32>(positions[VertexIndex],0.0,1.0);
+    output.uv = vec2<f32>(UVs[VertexIndex]);
     return output;
 }
-const gauss5 : array<f32,5> = array<f32,5>(1.0, 1.0, 1.0, 1.0, 1.0);
-//const float gauss5[5] = float[5](1.0, 4.0, 6.0, 4.0, 1.0);
+
 
 @fragment 
-fn frag_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32>{
+fn fs_main(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32>{
     let texture_size = textureDimensions(color_buffer);
     var texel_size = 1.0 / vec2f(f32(texture_size.x),f32(texture_size.y));	
 	
 	var screen_pos = vec2(0);
-    screen_pos.x = i32(TexCoord.x * f32(texture_size.x));
-    screen_pos.y = i32(TexCoord.y * f32(texture_size.y));
+    screen_pos.x = i32(uv.x * f32(texture_size.x));
+    screen_pos.y = i32(uv.y * f32(texture_size.y));
 
 
     
-    //if iteration==maxIteration
-        //new_color = accumulation_read + current_samlpe
-        //accumulation_write = new_color
-    //else
-        //return accumulation_read
-    //textureStore(accumulation_write,screen_pos,vec4f(0.f));
     if(config.currentIteration == config.maxIterations-1){//je to posledni iterace
         if(config.currentSample == 0){
             var new_color = textureLoad(color_buffer,screen_pos,0).xyz;
@@ -109,24 +115,10 @@ fn frag_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32>{
                 }
             }
             new_color = sumC.xyz/sumW;
-            /*var texel_size = 1.0 / vec2f(textureDimensions(accumulation_read));		
-            var sum = vec3(0.0);
-            var gauss5 = array<f32,5>(1.0f, 1.0f, 6.0f, 1.0f, 1.0f);
-            let gauss_length = 10;
-            for (var x = 0; x < gauss_length; x++)
-            {
-                for (var y = 0; y < gauss_length; y++)
-                {
-                    // Offset from the center texel
-                    let offset =  vec2i(x-gauss_length,y-gauss_length);//texel_size * (vec2f(f32(x), f32(y)) - vec2f(f32(gauss_length)/2.));
-
-                    // Adding weighted value
-                    sum += gauss5[x] * gauss5[y] * textureLoad(accumulation_read,screen_pos + offset,0).xyz;
-                }
-            }	
 
 
-            new_color = sum / (10.f*10.f);*/
+
+            //new_color = sum / (10.f*10.f);*/
             //new_color = sumC.xyz/sumW;
             textureStore(accumulation_write,screen_pos,vec4f(new_color,0.f));
             let gamma = 2.2f;

@@ -1,11 +1,23 @@
-
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: raytracing_bvh_frag.wgsl
+ *
+ *  Description: 
+ *  This shader is part of the prototype. It performs ray tracing(direct lighting) using BVH traversal with local stack taken from (https://github.com/jbikker/bvh_article/blob/main/cl/tools.cl) which is under "Unlicense" license.
+ *  
+ * -----------------------------------------------------------------------------
+ */
 @group(0) @binding(0) var<uniform> uCamera: Camera;
 const tex_coords = array<vec2f,3>(
 	vec2f(0.0, 0.0),
 	vec2f(2.0, 0.0),
 	vec2f(0.0, 2.0)
 );
-//layout (local_size_x = 16,local_size_y = 16) in;
+
 
 @group(0) @binding(1) var<storage,read> bvh: array<BVHNode>;
 @group(0) @binding(2) var<storage,read> spheres: array<Sphere>;
@@ -33,19 +45,19 @@ struct Sphere{
 };
 
 struct Ray {
-    origin:vec3f,     // The ray origin.
-    direction:vec3f,  // The ray direction.
+    origin:vec3f,     
+    direction:vec3f,  
 	octant: array<i32,3>,
 	dir_inv:vec3f,
 	neg_org_div_dir:vec3f
 };
 
-// The definition of an intersection.
+
 struct Hit {
-    intersection:vec3f,      // The intersection point.
-	t:f32,				  // The distance between the ray origin and the intersection points along the ray. 
-    normal:vec3f,             // The surface normal at the interesection point.
-	material:vec4f			  // The material of the object at the intersection point.
+    intersection:vec3f,     
+	t:f32,				  
+    normal:vec3f,             
+	material:vec4f			  
 };
 //const emptySphere = Sphere(vec3f(0.f),-1.f,vec4f(0.f)) ; 
 const miss = Hit(vec3f(0.0f), 1e20, vec3f(0.0f), vec4f(0.f));
@@ -64,7 +76,7 @@ struct VertexOutput {
 
 @vertex
 fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
-	//return vs_main_optionA(in);
+
 	var texCoord = tex_coords[in_vertex_index];
 	var out : VertexOutput;
 	out.tex_coord = texCoord;
@@ -75,7 +87,6 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 
-	//ProjectionView
 	let aspect_ratio = 1280.0/720.0;
 	let uv = (2.0*in.tex_coord-1.0)* vec2f(aspect_ratio, 1.0);// * vec2f(aspect_ratio, 1.0);
 	let P = (uCamera.inversePV * vec4f(uv, -1.f, 1.0)).xyz;
@@ -113,27 +124,12 @@ fn RaySphereIntersection(ray : Ray, sphereIndex : i32) -> Hit{//sphere : Sphere)
 		/*if (dot(ray.direction, n) > 0) {
 			n = -n; 
 		}*/
-		return Hit(intersection+sphere.origin.xyz, t, n,vec4(0.f,1.f,0.f,1.f));//sphere.color);
+		return Hit(intersection+sphere.origin.xyz, t, n,sphere.color);//sphere.color);
 	}else{
 		return miss;
 	}
 
-	/*let co: vec3<f32> = ray.origin - sphere.origin;
-    let a: f32 = dot(ray.direction, ray.direction);
-    let b: f32 = 2.0 * dot(ray.direction, co);
-    let c: f32 = dot(co, co) - sphere.radius * sphere.radius;
-    let discriminant: f32 = b * b - 4.0 * a * c;
-
-    if (discriminant > 0.0) {
-
-        let t: f32 = (-b - sqrt(discriminant)) / (2 * a);
-
-        //if (t > tMin && t < tMax) {
-            let intersection = co + t * ray.direction;
-			return Hit(intersection+sphere.origin, t, vec3(1.),sphere.color);
-        //}
-    }
-    return miss;*/
+	
 }
 
 
@@ -142,8 +138,7 @@ fn Trace(ray : Ray) -> vec3f{
     var light : Light;
 	light.position = vec3f(0.0f,120.5f,10.0f);
 	light.diffuse = vec3f(0.8f);
-	// The accumulated color and attenuation used when tracing the rays throug the scene.
-
+	
 
 
 	var color = vec3f(0.0,0.0,0.0);
@@ -151,9 +146,7 @@ fn Trace(ray : Ray) -> vec3f{
 
 	
 
-	// Due to floating-point precision errors, when a ray intersects geometry at a surface, the point of intersection could possibly be just below the surface.
-	// The subsequent reflection and shadow rays would then bounce off the *inside* wall of the surface. This is known as self-intersection.
-	// We, therefore, use a small epsilon to offset the subsequent rays.
+	
 	let epsilon = 0.001f;
 
 	
@@ -183,12 +176,8 @@ fn Trace(ray : Ray) -> vec3f{
 
 			let shadowRay  = (Ray(shadowOrigin, L,oct,dir_inv,neg_inv));
 			
-			/*color += hit.material.xyz;//calculatePBR(ray,hit.intersection,N,hit.material.xyz);
-			let reflected1 = reflect(tmpRay.direction,hit.normal);
-			let newRay1 = Ray(hit.intersection +  epsilon * N, reflected1);
-			tmpRay = newRay1;
-			continue;*/
-			let shadowHit = Evaluate(shadowRay);
+
+			//let shadowHit = Evaluate(shadowRay);
 
 			
 			
@@ -196,27 +185,19 @@ fn Trace(ray : Ray) -> vec3f{
 			var F = schlickFresnel(NdotV,hit.material.xyz);
 			//var F = schlickFresnel_refract(1.00029f,1.125f,NdotV);
 			var F_ref = 1.0 - F;
-			//REFRACTIVE_INDEX_OUTSIDE 1.00029
-			//REFRACTIVE_INDEX_INSIDE  1.125
 
-			//color += calculatePBR(ray,hit.intersection,N,hit.material.xyz);
-			if(isHitMiss(shadowHit)){
-				//color += calculatePBR(ray,hit.intersection,N,hit.material.xyz);
-				//dif
 				color += NdotL * light.diffuse * hit.material.xyz * attenuation;
 				//specular
 				let Geom = GeometricAttenuation(N, V, L, H);
 				let Dist = BeckmannDistribution(N, H, 0.2);
 				NdotV = dot(N,V);
 				color += Dist * Geom * F / 4.0 / NdotV;
-			}
+			
 
 			
 			
 			attenuation *= F;
-			/*else{
-				color +=ambient;
-			}*/
+
 			let reflected = reflect(tmpRay.direction,hit.normal);
 			let newOr = hit.intersection +  epsilon * N;
 			let oct2 : array<i32,3> = array<i32,3>(select(0,3,reflected[0]<0),select(0,3,reflected[1]<0),select(0,3,reflected[2]<0));
@@ -260,7 +241,7 @@ fn traverseKdTree(ray :Ray) -> Hit{
 	//return miss;
 	//return test_renderAllSpheres(ray);
 	return traverseBVH(ray);
-	//return traverseBVH_trail(ray);
+	
 	//return miss;
 
 }
@@ -324,36 +305,13 @@ fn isHitMiss(hit:Hit) -> bool{
 
 fn schlickFresnel(vDotH : f32,color:vec3f) -> vec3f{
 	var F0 = vec3f(0.04);
-	//TODO: if is metal
 
-	/*if(metallic){
-		F0 = color;
-	}*/
 
 	let res = F0 + (1.0f-F0) * (pow(clamp(1.0f - vDotH,0.f,1.f),5));
 	return res;
 }
 
-fn schlickFresnel_refract(n1 : f32, n2 : f32, vDotH : f32) -> f32{
 
-	var r0 = (n1-n2) / (n1+n2);
-	r0 *= r0;
-	var cosX = vDotH;
-	if (n1 > n2)
-	{
-		let n = n1/n2;
-		let sinT2 = n*n*(1.0-cosX*cosX);
-		// Total internal reflection
-		if (sinT2 > 1.0){ return 1.0;}
-		cosX = sqrt(1.0-sinT2);
-	}
-	let x = 1.0-cosX;
-	var ret = r0+(1.0-r0)*x*x*x*x*x;
-
-	// adjust reflect multiplier for object reflectivity
-	ret = (0.01 + (1.0- 0.01) * ret);
-	return ret;
-}
 
 fn BeckmannDistribution(N:vec3f, H:vec3f, m:f32) -> f32
 {
@@ -376,113 +334,15 @@ fn traverseBVH(ray:Ray) -> Hit{
     var stack: array<BVHNode, 32>;
     var stackLocation: u32 = 0;
 	var closest_hit = miss;
-	var j = 0;
-	let main = RayBoxIntersection_new(ray,node.minAABB,node.maxAABB);
+	let main = RayBoxIntersection(ray,node.minAABB,node.maxAABB);
 
 	 while (true) {
-        var i = 0;
-		while(node.leftChild > 0){
-			i++;
-			var child1: BVHNode = bvh[node.leftChild];
-			var child2: BVHNode = bvh[node.leftChild+1];
 
-			var distance1 = RayBoxIntersection(ray,child1.minAABB,child1.maxAABB).x;//hit_aabb(ray, child1);
-			var distance2 = RayBoxIntersection(ray,child2.minAABB,child2.maxAABB).x;
-
-
-			
-			/*if(distance1<miss.t && distance1 != -999.f){
-				var h = miss;
-				h.material = vec4(1.f,0.f,0.f,1.f);
-				h.t = distance1;
-				return h;
-			}*/
-			//if((distance1 > distance2 && distance2 != missT) || (distance1 == missT && distance2 != missT)){
-			if(distance1 > distance2){
-				//swap
-				var c = child1;
-				child1 = child2;
-				child2 = c;
-
-				var tmp = distance1;
-				distance1 = distance2;
-				distance2 = tmp;
-			}
-			if(distance1 == missT){//if miss
-				if (stackLocation == 0) {
-
-					break;
-				}
-				else {
-
-					stackLocation -= 1;
-					node = stack[stackLocation];
-				}
-			}else{
-				node = child1;
-				if(distance2 != missT){
-					//stackLocation++;
-					stack[stackLocation] = child2;
-					stackLocation++;
-				}
-			}
-		}
-        
-			
-				/*var h = miss;
-				h.material = vec4(0.f,0.f,1.f,1.f);
-				h.t = 10.f;
-				return h;*/
-			
-            for (var i = 0; i < node.numberOfSpheres; i++) {
-				let sphereId = i+(-1*node.leftChild);
-                var hit = RaySphereIntersection(ray, sphereId);
-				//hit.t = -10. * spheres[sphereId].radius;
-                if(hit.t < closest_hit.t){
-					closest_hit = hit;
-				}
-            }
-			if(closest_hit.t<missT){
-				return closest_hit;
-			}
-			if (stackLocation == 0) {
-				break;
-				
-            }
-            else {
-                stackLocation -= 1;
-                node = stack[stackLocation];
-            }
-			
-        
-        
-    }
-	/*closest_hit.material = vec4f(abs(node.minAABB.x/400.f),0.f,0.f,1.f);//vec4f(0.f,1.f,0.f,1.f);
-	closest_hit.t = 10.f;*/
-
-	return closest_hit;
-}
-
-/*fn traverseBVH(ray:Ray) -> Hit{
-	var nodeId = 0;
-	var node: BVHNode = bvh[nodeId];
-    var stack: array<BVHNode, 32>;
-    var stackLocation: u32 = 0;
-	var closest_hit = miss;
-	var j = 0;
-	let main = RayBoxIntersection_new(ray,node.minAABB,node.maxAABB);
-
-	 while (true) {
-		//j++;
         
 		
         if (node.leftChild <= 0) {
 			
-				/*var h = miss;
-				h.material = vec4(0.f,0.f,1.f,1.f);
-				h.t = 10.f;
-				return h;*/
-			
+		
             for (var i = 0; i < node.numberOfSpheres; i++) {
 				let sphereId = i+(-1*node.leftChild);
                 var hit = RaySphereIntersection(ray, sphereId);
@@ -491,9 +351,6 @@ fn traverseBVH(ray:Ray) -> Hit{
 					closest_hit = hit;
 				}
             }
-			if(closest_hit.t<missT){
-				return closest_hit;
-			}
 			if (stackLocation == 0) {
 				break;
 				
@@ -510,15 +367,7 @@ fn traverseBVH(ray:Ray) -> Hit{
 		var distance1 = RayBoxIntersection(ray,child1.minAABB,child1.maxAABB).x;//hit_aabb(ray, child1);
 		var distance2 = RayBoxIntersection(ray,child2.minAABB,child2.maxAABB).x;
 
-
 		
-		/*if(distance1<miss.t && distance1 != -999.f){
-			var h = miss;
-			h.material = vec4(1.f,0.f,0.f,1.f);
-			h.t = distance1;
-			return h;
-		}*/
-		//if((distance1 > distance2 && distance2 != missT) || (distance1 == missT && distance2 != missT)){
 		if(distance1 > distance2){
 			//swap
 			var c = child1;
@@ -549,221 +398,12 @@ fn traverseBVH(ray:Ray) -> Hit{
 		}
 		
 		
-		//j++;
-    }
-	/*closest_hit.material = vec4f(abs(node.minAABB.x/400.f),0.f,0.f,1.f);//vec4f(0.f,1.f,0.f,1.f);
-	closest_hit.t = 10.f;*/
-
-	return closest_hit;
-}*/
-
-fn traverseBVH_trail(ray:Ray) -> Hit{
-	var nodeId = 0;
-	var node: BVHNode = bvh[nodeId];
-	
-    var shortStack: array<BVHNode, 8>;
-    var stackLocation: i32 = 0;
-	var closest_hit = miss;
-	var j = 0;
-	
-	var trail : u32 = 0;
-	var level : u32 = 0;
-	var popLevel : u32 = 9999999;
-
-	while(true && j<20){
-		j++;
-		var i = 0;
-		while(node.leftChild > 0 && i<20){
-			i++;
-			var nearChild: BVHNode = bvh[node.leftChild];
-			var farChild: BVHNode = bvh[node.leftChild+1];
-
-			var nearDistance = RayBoxIntersection(ray,nearChild.minAABB,nearChild.maxAABB).x;
-			var farDistance = RayBoxIntersection(ray,farChild.minAABB,farChild.maxAABB).x;
-
-			if(nearDistance != missT && farDistance != missT){
-				if(nearDistance>farDistance){
-					let tmp = nearChild;
-					nearChild = farChild;
-					farChild = tmp;
-				}
-				level++;
-				if( firstLeadingBit(level) != 0){
-					node = farChild;
-				}else{
-					node = nearChild;
-					//push far
-					shortStack[stackLocation] = node;
-					stackLocation++;
-				}
-			}
-			else if(nearDistance == missT && farDistance != missT){
-				level++;
-				if(level != popLevel){
-					let shift : u32 =  u32(1<<(31-level));
-					level = level | shift;
-					node = farChild;
-				}else{
-					//pop
-					trail = trail & ~(level);
-					trail = trail + level;
-
-					let temp = trail >> 1;
-					level = (((temp-1)^temp)+1);
-
-					if(level>>31 == 1){
-						//terminate
-						return miss;
-					}
-					popLevel = level;
-					if(stackLocation == 8){ //exhaseusted
-						node = bvh[0];
-						level = 0;
-						stackLocation = 0;
-					}else{
-						stackLocation--;
-						if (stackLocation == -1) {
-							return miss;
-						}
-						node = shortStack[stackLocation];
-					}
-				}
-			}else if(nearDistance != missT && farDistance == missT){
-				level++;
-				if(level != popLevel){
-					let shift : u32 =  u32(1<<(31-level));
-					level = level | shift;
-					node = nearChild;
-				}else{
-					//pop
-					trail = trail & ~(level);
-					trail = trail + level;
-
-					let temp = trail >> 1;
-					level = (((temp-1)^temp)+1);
-
-					if(firstLeadingBit(level) == 0){
-						//terminate
-						return miss;
-					}
-					popLevel = level;
-					if(stackLocation == 8){ //exhaseusted
-						node = bvh[0];
-						level = 0;
-						stackLocation = 0;
-					}else{
-						stackLocation--;
-						if (stackLocation == -1) {
-							return miss;
-						}
-						node = shortStack[stackLocation];
-					}
-				}
-			}else{
-				//POP
-				trail = trail & ~(level);
-				trail = trail + level;
-
-				let temp = trail >> 1;
-				level = (((temp-1)^temp)+1);
-
-				if(firstLeadingBit(level) == 0){
-					//terminate
-					return miss;
-				}
-				popLevel = level;
-				if(stackLocation == 8){ //exhaseusted
-					node = bvh[0];
-					level = 0;
-					stackLocation = 0;
-				}else{
-					stackLocation--;
-					if (stackLocation == -1) {
-						return miss;
-					}
-					node = shortStack[stackLocation];
-				}
-			}
-			
-		}
-
-		for (var i = 0; i < node.numberOfSpheres; i++) {
-			let sphereId = i+(-1*node.leftChild);
-			var hit = RaySphereIntersection(ray, sphereId);
-			//hit.t = -10. * spheres[sphereId].radius;
-			if(hit.t < closest_hit.t){
-				closest_hit = hit;
-			}
-		}
-		if(closest_hit.t< missT){
-			return closest_hit;
-		}
-
-		//pop
-
-		trail = trail & ~(level);
-		trail = trail + level;
-
-		let temp = trail >> 1;
-		level = (((temp-1)^temp)+1);
-
-		if(firstLeadingBit(level) == 0){
-			//terminate
-			return miss;
-		}
-		popLevel = level;
-		if(stackLocation == 8){ //exhaseusted
-			node = bvh[0];
-			level = 0;
-			stackLocation = 0;
-		}else{
-			stackLocation--;
-			if (stackLocation == -1) {
-                return miss;
-            }
-			node = shortStack[stackLocation];
-		}
 		
+    }
 
-	}
+
 	return closest_hit;
 }
 
-/*fn pop( level : ptr<function,i32>,
-		popLevel : ptr<function,i32>,
-		trail : ptr<function,i32>,
-		shortStack : ptr<function,array<BVHNode, 16>>,
-		stackLocation : ptr<function,i32>,
-		node : ptr<function,BVHNode>
-		)-> bool{//false = terminate
-	trail = trail & ~(level);
-	trail = trail + level;
-
-	let temp = trail >> 1;
-	level = (((temp-1)^temp)+1);
-
-	if(level>>31 == 1){
-		//terminate
-		return false;
-	}
-	popLevel = level;
-	if(stackLocation == 31){ //exhaseusted
-		node = bvh[0];
-		level = 0;
-	}else{
-		stackLocation--;
-		node = shortStack[stackLocation];
-	}
-	return true;
-}
-
-fn pushStack(node : ptr<function,BVHNode>,shortStack : ptr<function,array<BVHNode, 16>>,stackLocation : ptr<function,i32>){
-		&shortStack[&stackLocation] = &node;
-		stackLocation++;
-}
 
 
-fn popStack(shortStack : ptr<function,array<BVHNode, 16>>,stackLocation : ptr<function,i32>)->BVHNode{
-		stackLocation--;
-		return &shortStack[&stackLocation];
-}*/

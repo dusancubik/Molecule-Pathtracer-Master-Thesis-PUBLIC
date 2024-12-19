@@ -1,3 +1,18 @@
+/*
+ * -----------------------------------------------------------------------------
+ *  Author: Dusan Cubik
+ *  Project: Physically Based Renderer for WebGPU (Prototype)
+ *  Institution: Masaryk University
+ *  Date: 16. 12. 2024
+ *  File: rendererBase.hpp
+ *
+ *  Description:
+ *  The RendererBase class is a base class for managing a rendering pipeline.
+ *  It includes WebGPU functionalities such as initializing the rendering pipeline, creating buffers/textures and bind groups.
+ *  Setup of these WebGPU functionalities is based on Elie Michel's LearnWebGPU-Code repository 
+ *  (https://github.com/eliemichel/LearnWebGPU-Code/) which is licensed under the MIT License.
+ * -----------------------------------------------------------------------------
+ */
 #pragma once
 #include "renderPipelineInterface.hpp"
 
@@ -10,9 +25,9 @@ class RendererBase : public RenderPipelineInterface {
 
 		void render(WGPUTextureView& nextTexture) {}
 
-		int getFrameTimeNS() { return frameTimeNS; }
+		int64_t getFrameTimeNS() { return frameTimeNS; }
 
-		std::shared_ptr<Camera> getCamera() { return nullptr; }
+		std::shared_ptr<PROTO_Camera> getCamera() { return nullptr; }
 
 		void createBindingLayout(uint32_t binding, uint64_t minBindingSize, WGPUBindGroupLayoutEntry& bindingLayout, WGPUBufferBindingType bufferType, WGPUShaderStageFlags shaderFlags);
 		void createBindGroupEntry(WGPUBindGroupEntry& bindGroupEntry, uint32_t binding, WGPUBuffer buffer, uint64_t offset, uint64_t size);
@@ -20,9 +35,9 @@ class RendererBase : public RenderPipelineInterface {
 		void initDepthBuffer();
 	protected:
 		//Timestamp
-		std::shared_ptr<Timestamp> timestamp;
+		std::shared_ptr<Timestamp<WGPURenderPassTimestampWrite>> timestamp;
 		static void readBufferMap(WGPUBufferMapAsyncStatus status, void* userdata);
-		int frameTimeNS = 0;
+		int64_t frameTimeNS = 0;
 
 		WGPUDevice device;
 		WGPUQueue queue;
